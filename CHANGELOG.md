@@ -2,7 +2,7 @@
 
 Specification versions (`spec_version`) and tool versions are tracked together until 1.0.
 
-## Unreleased
+## 0.6.0 (2026-11-05): first public release
 
 Licence
 - The software moves from Apache 2.0 to the GNU AGPL v3 (AGPL-3.0-only) with additional terms

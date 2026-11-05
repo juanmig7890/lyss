@@ -1,7 +1,20 @@
 # LYSS: Lyaazale Switch Security
 
-An open, vendor-neutral security standard for network switches, and a read-only tool that
-assesses switches against it.
+[![tests](https://github.com/lyss-project/lyss/actions/workflows/tests.yml/badge.svg)](https://github.com/lyss-project/lyss/actions/workflows/tests.yml)
+[![licence: AGPL-3.0](https://img.shields.io/badge/licence-AGPL--3.0-blue)](LICENSE)
+[![specification: CC BY 4.0](https://img.shields.io/badge/specification-CC%20BY%204.0-lightgrey)](LICENSE-SPEC)
+[![python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)](https://www.python.org/downloads/)
+[![made in Morocco](https://img.shields.io/badge/made%20in-Morocco-c1272d)](https://lyss.dev)
+
+**Telnet still on. SNMP "public". Firmware with an exploited flaw. Would you find them on your
+switches?**
+
+LYSS is an open, vendor-neutral security standard for network switches, and a free, read-only
+tool that checks your switches against it, shows the evidence and gives the fix.
+
+![LYSS demo: one-click read-only scan, evidence and fix for every finding, topology, control matrix, low-risk fixes verified by a new scan](docs/media/lyss-demo.gif)
+
+<sub>Demo on a fictitious network. Cisco IOS · Cisco Business · HPE Aruba AOS-S · Website: [lyss.dev](https://lyss.dev)</sub>
 
 LYSS defines **what** a securely managed switch looks like, once, independently of any vendor
 (the [specification](docs/LYSS-Specification.md)), and **how to verify it** on each platform
@@ -13,15 +26,17 @@ LYSS defines **what** a securely managed switch looks like, once, independently 
   remote logging and time synchronization, access-port hygiene.
 - **Level 3, Advanced**: access-layer protections (draft).
 
-> Status: **0.5.0, draft specification, preview.** The specification and the tool may still change
+> Status: **0.6.0, draft specification, preview.** The specification and the tool may still change
 > before 1.0. Feedback and adapters for other platforms are welcome.
 > Author: Mouad Lyaazale.
 
 ## Try it in two minutes (no switch needed)
 
 ```sh
-pip install -e .
-python -m lyss demo
+git clone https://github.com/lyss-project/lyss.git && cd lyss
+python -m venv .venv
+.venv/bin/pip install -e .              # Windows: .venv\Scripts\pip install -e .
+.venv/bin/python -m lyss demo --open    # Windows: .venv\Scripts\python -m lyss demo --open
 ```
 
 This starts a simulated network of six fictitious switches (Cisco IOS, Cisco Small Business,
