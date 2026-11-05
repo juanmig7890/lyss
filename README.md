@@ -109,6 +109,12 @@ and the specification under CC BY 4.0. In short:
 
 The exact terms are in [LICENSE](LICENSE), [LICENSE-SPEC](LICENSE-SPEC) and [NOTICE](NOTICE).
 
+## Support LYSS
+
+LYSS is free and built on personal time. If it helps you secure your network, you can support its
+development on [Ko-fi](https://ko-fi.com/lyaazale). Reporting wrong verdicts and sharing the
+project help just as much.
+
 ## Data handling
 
 Real switch configurations contain password hashes, keys and topology. They stay in `private/`
