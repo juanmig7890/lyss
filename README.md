@@ -28,7 +28,7 @@ LYSS defines **what** a securely managed switch looks like, once, independently 
 
 > Status: **0.6.0, draft specification, preview.** The specification and the tool may still change
 > before 1.0. Feedback and adapters for other platforms are welcome.
-> Author: Mouad Lyaazale.
+> Author: Mouad Lyaazale (معاد اليازل).
 
 ## Try it in two minutes (no switch needed)
 

@@ -22,3 +22,10 @@ def test_licence_is_agpl_v3():
 def test_attribution_is_shown_in_footer_login_page_and_reports():
     for name in ("base.html", "_hero.html", "report.html"):
         assert ATTRIBUTION in (TEMPLATES / name).read_text(encoding="utf-8"), name
+
+
+def test_author_name_in_arabic_is_spelled_by_the_author():
+    """The author's own Arabic spelling (machine translations get it wrong)."""
+    arabic = "معاد اليازل"
+    assert arabic in (ROOT / "NOTICE").read_text(encoding="utf-8")
+    assert arabic in (TEMPLATES / "_hero.html").read_text(encoding="utf-8")
