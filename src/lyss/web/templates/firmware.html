@@ -1,0 +1,79 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{% extends "base.html" %}
+{% block title %}Firmware{% endblock %}
+{% block nav_firmware %}active{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Firmware upgrade</h1>
+    <p class="muted">Cisco Catalyst 1000 (IOS 15.2(7)E). Two separate steps: <strong>staging</strong> installs the new
+      image next to the current one without rebooting; <strong>activation</strong> reboots the switch on it, in a
+      maintenance window. The previous image stays in flash.</p>
+  </div>
+</div>
+
+{% if errors %}<div class="alert alert-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+{% if saved %}<div class="alert alert-ok">{{ saved }}</div>{% endif %}
+
+<section class="card job" id="fw-job" {% if not job or job.finished %}hidden{% endif %}>
+  <div class="job-head"><strong id="fw-title">{{ (job.action ~ " " ~ job.device) if job else "" }}</strong><span class="muted" id="fw-msg">{{ job.message if job else "" }}</span></div>
+</section>
+{% if job and job.finished %}
+<div class="alert {{ 'alert-error' if job.status == 'error' else 'alert-ok' }}">Last {{ job.action }} of {{ job.device }}: {{ job.outcome }}</div>
+{% endif %}
+
+<section class="card">
+  <h2>1. Image</h2>
+  <p class="muted small">Download the image from cisco.com (Cisco account needed). Keep Cisco's file name, and copy
+    the MD5 or SHA-512 shown on the download page: {{ project }} refuses a file that does not match it.</p>
+  {% if images %}
+  <table class="table compact">
+    <thead><tr><th>Image</th><th>Version</th><th>Size</th><th>Checked against</th></tr></thead>
+    <tbody>{% for i in images %}<tr><td class="mono small">{{ i.file }}</td><td>{{ i.version }}</td>
+      <td>{{ (i.size / 1048576)|round(1) }} MB</td><td>{{ i.checked_against|upper }} · {{ i.uploaded[:10] }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% endif %}
+  <form method="post" action="/firmware/upload" enctype="multipart/form-data" class="form-grid fw-upload">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Image file (.tar)<input type="file" name="image" accept=".tar" required></label>
+    <label>MD5 or SHA-512 from cisco.com<input name="hash" maxlength="128" pattern="[0-9a-fA-F]{32}|[0-9a-fA-F]{128}" required></label>
+    <div class="form-actions span-2"><button class="btn btn-primary" type="submit">Upload and verify</button></div>
+  </form>
+</section>
+
+{% for row in devices %}
+{% set d = row.device %}{% set st = row.state %}
+<section class="card fw-device">
+  <h2>{{ d.id }} <span class="muted mono small">{{ d.host }} · {{ row.result.model if row.result }} · running {{ row.result.firmware if row.result }}</span></h2>
+  <p class="small">Status: <strong>{{ st.status or "not staged" }}</strong>{% if st.version %} · {{ st.version }}{% endif %}{% if st.updated %} · {{ st.updated.replace("T", " ") }}{% endif %}</p>
+  <div class="fw-steps">
+    <form method="post" action="/firmware/stage" class="fw-step">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="device_id" value="{{ d.id }}">
+      <div class="label">2. Stage (no reboot)</div>
+      <select name="image" required {% if not images %}disabled{% endif %}>
+        {% for i in images %}<option value="{{ i.file }}">{{ i.version }}</option>{% endfor %}
+      </select>
+      <button class="btn" type="submit" {% if not images or (job and not job.finished) %}disabled{% endif %}
+              data-confirm="Stage the image on {{ d.id }}? No reboot: the configuration is saved, the image copied, verified and installed next to the current one.">Stage</button>
+    </form>
+    <form method="post" action="/firmware/activate" class="fw-step fw-activate">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="device_id" value="{{ d.id }}">
+      <div class="label">3. Activate: reboots the switch</div>
+      {% if row.links %}
+      <p class="small text-fail">During the reboot (several minutes) these links are down:</p>
+      <ul class="small fw-links">{% for l in row.links %}<li class="mono">{{ l }}</li>{% endfor %}</ul>
+      {% endif %}
+      <label class="small">Type <span class="mono">{{ d.id }}</span> to confirm
+        <input name="confirm" autocomplete="off" {% if st.status != "staged" %}disabled{% endif %}></label>
+      <button class="btn btn-danger" type="submit" {% if st.status != "staged" or (job and not job.finished) %}disabled{% endif %}>Reboot on the new image</button>
+    </form>
+  </div>
+</section>
+{% else %}
+<div class="card empty"><h2>No Catalyst 1000 switch</h2><p class="muted">Firmware upgrades are available for scanned Cisco Catalyst 1000 switches.</p></div>
+{% endfor %}
+<script src="/static/firmware.js" defer></script>
+{% endblock %}

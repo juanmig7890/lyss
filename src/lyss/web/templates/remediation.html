@@ -1,0 +1,96 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{% extends "base.html" %}
+{% block title %}Remediation{% endblock %}
+{% block nav_remediation %}active{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    {% if only %}<a class="back" href="/devices/{{ only }}">← {{ only }}</a>{% endif %}
+    <h1>Remediation</h1>
+    <p class="muted">Low-risk fixes only. For each switch, one at a time: fresh scan, configuration backup, commands,
+      automatic rollback on error, verification over a new SSH connection, then save. Every action is logged.</p>
+  </div>
+</div>
+
+{% if errors %}<div class="alert alert-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+{% if not cfg.enabled %}
+<div class="alert alert-warn">Remediation is disabled. Review the fixes below, then enable it in <a href="/settings#remediation">Settings › Remediation</a>.</div>
+{% endif %}
+
+<section class="card job" id="rem-job" {% if not job or job.finished %}hidden{% endif %}>
+  <div class="job-head"><strong>Applying fixes <span id="rem-pct">0 %</span></strong><span class="muted" id="rem-count"></span></div>
+  <div class="progress"><div id="rem-bar"></div></div>
+  <ul class="rem-progress" id="rem-items"></ul>
+</section>
+
+{% if job and job.finished %}
+<section class="card">
+  <h2>Last run</h2>
+  <ul class="rem-result">
+    {% for id, item in job["items"].items() %}
+    <li><strong>{{ id }}</strong> · <span class="{{ 'text-fail' if item.status == 'error' or 'rolled back' in item.outcome else '' }}">{{ item.outcome or item.status }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if rows %}
+<form method="post" action="/remediation/apply">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  {% for row in rows %}
+  <section class="card rem-device">
+    <div class="rem-head">
+      <h2><a href="/devices/{{ row.device.id }}">{{ row.device.id }}</a> <span class="muted mono small">{{ row.device.host }}{% if row.result %} · {{ row.result.model }} {{ row.result.firmware }}{% endif %}</span></h2>
+      <label class="check small"><input type="checkbox" data-select-device="{{ row.device.id }}"> select all</label>
+    </div>
+    {% for f in row.fixes %}
+    <div class="rem-fix {{ 'blocked' if f.blocked }}">
+      <label class="check">
+        <input type="checkbox" name="fix" value="{{ row.device.id }}|{{ f.control_id }}" data-device="{{ row.device.id }}"
+               {% if f.blocked %}disabled{% endif %}>
+        <span class="mono cid">{{ f.control_id }}</span>
+        <strong>{{ f.label }}</strong>
+        {% if f.kind == "mitigation" %}<span class="tag">mitigation</span>{% endif %}
+      </label>
+      {% if f.note %}<p class="note">{{ f.note }}</p>{% endif %}
+      {% if f.blocked %}<p class="text-fail small">Not available: {{ f.blocked }}</p>{% endif %}
+      <details>
+        <summary class="small">Commands and rollback</summary>
+        <div class="rem-cmds">
+          <div><div class="label">Commands</div><pre class="code code-fix">{{ f.commands|join("\n") }}</pre></div>
+          <div><div class="label">Rollback</div><pre class="code">{{ f.rollback|join("\n") }}</pre></div>
+        </div>
+      </details>
+    </div>
+    {% endfor %}
+  </section>
+  {% endfor %}
+  <div class="bulk-bar card">
+    <span class="muted small">Selected fixes are applied switch by switch. A switch that fails verification is rolled back and not saved.</span>
+    <button class="btn btn-primary" type="submit" {% if not cfg.enabled or (job and not job.finished) %}disabled{% endif %}
+            data-confirm="Apply the selected fixes now? Each switch is backed up first and rolled back automatically on error.">Apply selected fixes</button>
+  </div>
+</form>
+{% else %}
+<div class="card empty"><h2>Nothing to fix automatically</h2><p class="muted">No low-risk fix applies to the failing controls{% if only %} of {{ only }}{% endif %}. The remaining findings need a planned change.</p></div>
+{% endif %}
+
+<section class="card">
+  <h2>Change log</h2>
+  {% if changes %}
+  <table class="table compact">
+    <thead><tr><th>Date</th><th>Switch</th><th>Applied</th><th>Rolled back</th><th>Outcome</th></tr></thead>
+    <tbody>
+      {% for c in changes %}
+      <tr><td class="mono nowrap">{{ c.ts.replace("T", " ") }}</td><td>{{ c.device }}</td>
+          <td class="mono small">{{ (c.applied or [])|join(", ") or "—" }}</td>
+          <td class="mono small">{{ (c.rolled_back or [])|join(", ") or "—" }}</td>
+          <td class="small">{{ c.outcome }}{% if c.saved %} · saved{% endif %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No change yet.</p>{% endif %}
+</section>
+<script src="/static/remediation.js" defer></script>
+{% endblock %}

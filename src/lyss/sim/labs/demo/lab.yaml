@@ -1,0 +1,123 @@
+# LYSS demo lab: a FICTITIOUS small company network ("Demo Corp"), for demonstrations,
+# screenshots and tests. Every name, address, serial number and secret here is invented:
+# IPv4 documentation ranges (RFC 5737), MAC addresses from the documentation block
+# 00:00:5e:00:53:xx (RFC 7042). Nothing comes from a real network.
+name: demo
+organization: Demo Corp
+description: >-
+  One core switch, two Cisco Catalyst access switches, two Cisco Small Business switches and one
+  HPE Aruba switch, with a realistic mix of good and bad security settings.
+credentials: {username: lyss-demo, password: demo}
+
+switches:
+  demo-core:
+    platform: cisco_ios
+    model: C1000-48P-4G-L
+    version: 15.2(7)E14
+    serial: FOC0000DEM1
+    mac: 00:00:5e:00:53:01
+    mgmt_ip: 192.0.2.1
+    ports: 52
+    uplink_from: 49
+    up: 1-4
+    ssh: modern
+    expected_level: 2        # hardened to Level 2
+  demo-acc-01:
+    platform: cisco_ios
+    model: C1000-24P-4G-L
+    version: 15.2(7)E14
+    serial: FOC0000DEM2
+    mac: 00:00:5e:00:53:02
+    mgmt_ip: 192.0.2.11
+    ports: 28
+    uplink_from: 25
+    up: 1-14
+    ssh: modern
+    expected_level: 0        # almost Level 1: only the 30-minute idle timeout fails
+  demo-acc-02:
+    platform: cisco_ios
+    model: C1000-24T-4G-L
+    version: 15.2(7)E8
+    serial: FOC0000DEM3
+    mac: 00:00:5e:00:53:03
+    mgmt_ip: 192.0.2.12
+    ports: 28
+    uplink_from: 25
+    up: 1-20
+    ssh: legacy
+    expected_level: 0        # Telnet, HTTP, public SNMP, cleartext passwords, firmware with a KEV
+  demo-sb-01:
+    platform: cisco_sb
+    model: CBS350-24P-4G
+    description: CBS350-24P-4G 24-Port Gigabit PoE Managed Switch
+    version: 3.3.0.16
+    serial: PSZ0000DEM4
+    mac: 00:00:5e:00:53:04
+    mgmt_ip: 192.0.2.21
+    sysoid: 1.3.6.1.4.1.9.6.1.95.24.6
+    ports: 28
+    uplink_from: 25
+    up: 1-8
+    ssh: modern
+    expected_level: 1        # Level 1; Level 2 gaps: management ACL, banner, unused ports, BPDU guard
+  demo-sb-02:
+    platform: cisco_sb
+    model: SG300-28P
+    description: SG300-28P 28-Port Gigabit PoE Managed Switch
+    version: 1.4.11.5
+    serial: DNI0000DEM5
+    mac: 00:00:5e:00:53:05
+    mgmt_ip: 192.0.2.22
+    sysoid: 1.3.6.1.4.1.9.6.1.83.28.2
+    ports: 28
+    uplink_from: 25
+    up: 1-6
+    ssh: legacy
+    expected_level: 0        # end of support, unpatchable web vulnerability, Telnet/HTTP on
+  demo-hp-01:
+    platform: hp_procurve
+    model: JL253A
+    chassis: 2930F-24G-4SFP+ JL253A
+    version: WC.16.10.0012
+    rom: WC.17.02.0006
+    serial: SG00000DEM6
+    mac: 00:00:5e:00:53:06
+    mgmt_ip: 192.0.2.30
+    ports: 28
+    uplink_from: 25
+    up: 1-10
+    ssh: modern
+    expected_level: 0        # firmware before the HPESBNW05156 fix, Telnet and HTTP on
+
+# cables: [switch, port, switch, port] (port numbers; each platform names them its own way)
+links:
+  - [demo-core, 49, demo-acc-01, 25]
+  - [demo-core, 50, demo-acc-02, 25]
+  - [demo-core, 51, demo-sb-01, 25]
+  - [demo-core, 52, demo-hp-01, 25]
+  - [demo-acc-01, 26, demo-sb-02, 28]
+
+# devices that are not simulated switches but appear in neighbour tables
+externals:
+  - attached_to: demo-sb-01
+    port: 5
+    name: DEMO-AP-01
+    mac: 00:00:5e:00:53:41
+    ip: 198.51.100.21
+    remote_port: eth0
+    model: DEMO-AP
+    platform: Demo wireless access point
+    lldp_caps: B, W
+    protocols: [lldp]
+  - attached_to: demo-acc-02
+    port: 10
+    name: DEMO-LAB-SW.demo.example
+    mac: 00:00:5e:00:53:42
+    ip: 198.51.100.40
+    remote_port: GigabitEthernet0/1
+    model: WS-C2960X-24TS-L
+    platform: cisco WS-C2960X-24TS-L
+    description: Cisco IOS Software, C2960X Software (C2960X-UNIVERSALK9-M), Version 15.2(7)E10, RELEASE SOFTWARE (fc1)
+    lldp_caps: B
+    cdp_caps: S I
+    protocols: [cdp, lldp]

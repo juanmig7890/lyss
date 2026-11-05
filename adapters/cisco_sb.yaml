@@ -1,0 +1,242 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE.
+# LYSS adapter: Cisco Small Business (SG200/SG300/SG350/SG500, CBS250/CBS350).
+# Rule forms: see adapters/cisco_ios.yaml.
+# Cisco SB "show running-config" omits most defaults, and defaults change between
+# families and firmware versions, so config-only checks often end as "unknown";
+# device state (tools/Collect-State.ps1) resolves them.
+adapter: cisco_sb
+spec_version: "0.2.0-draft"
+platform: Cisco Small Business / Business switches
+status: draft, validated on SG300 1.4.11.5, SRW2024P, SG350 2.5.0.83 (real devices, 2026-11)
+
+facts:
+  model:
+    - {section: show inventory, line: '^PID:\s*(\S+)'}
+    # firmware older than 1.4 has no "show inventory"; sysObjectID 9.6.1.83.<ports> = 300 Series
+    - {section: show system, line: '^System Object ID:\s+1\.3\.6\.1\.4\.1\.9\.6\.1\.83\.(\d+)\.', format: 'SG300-{0} (from sysObjectID)'}
+  version: {section: show version, line: '^\s*(?:SW version|Version:)\s+(\d[\d.]+)'}
+
+checks:
+
+  # ---------------- Level 1 ----------------
+
+  LYSS-MGMT-001:
+    fail_if_any:
+      - {line: '^ip telnet server\s*$'}
+      - {state: '^TCP6?\s+All[:-]23\s.*listen', section: show services tcp-udp}
+    pass_if_any:
+      - {line: '^no ip telnet server\s*$'}
+      - {state: '^TCP6?\s+All[:-]23\s', section: show services tcp-udp, absent: true}
+    otherwise: unknown
+    note: Telnet default differs by family/firmware; collect "show services tcp-udp".
+    remediation: |
+      no ip telnet server
+
+  LYSS-MGMT-002:
+    fail_if_any:
+      - {state: '^SSH-1\.', section: ssh banner}
+    pass_if_any:
+      - {state: '^SSH-2\.0-', section: ssh banner}
+    otherwise: unknown
+    note: SSH protocol version is not in the config; collect the SSH banner.
+    remediation: |
+      ! upgrade firmware if SSHv1 (SSH-1.99) is still offered
+
+  LYSS-MGMT-003:
+    fail_if_any:
+      - {state: '^TCP6?\s+All[:-]80\s.*listen', section: show services tcp-udp}
+    pass_if_any:
+      - {line: '^no ip http server\s*$'}
+    otherwise: fail
+    note: HTTP web management is enabled by default on Cisco SB switches.
+    remediation: |
+      no ip http server
+      ip http secure-server   ! HTTPS (Cisco SB syntax)
+
+  LYSS-MGMT-004:
+    fail_if_any:
+      - {block: '^line (console|telnet|ssh)', line: '^exec-timeout 0\s*$'}
+      - {block: '^line (console|telnet|ssh)', line: '^exec-timeout (\d+)', gt: 10}
+    otherwise: pass
+    note: Default idle timeout is 10 minutes.
+    remediation: |
+      line ssh
+       exec-timeout 10
+      exit
+      line console
+       exec-timeout 10
+      exit
+
+  LYSS-AUTH-001:
+    fail_if_any:
+      - {line: '(?i)^snmp-server community (public|private)\b'}
+    otherwise: pass
+    remediation: |
+      no snmp-server community public
+      no snmp-server community private
+
+  LYSS-AUTH-002:
+    fail_if_any:
+      - {line: '^enable password (?:level \d+ )?(?!level\b|encrypted\b)\S'}
+    otherwise: pass
+    remediation: |
+      enable password level 15 <new-secret>   ! stored hashed ("encrypted") by the switch
+
+  LYSS-AUTH-003:
+    fail_if_any:
+      - {line: '^username \S+ password (?!encrypted\b)\S'}
+    otherwise: pass
+    remediation: |
+      username <name> password <new-secret> privilege 15   ! stored hashed by the switch
+
+  LYSS-AUTH-004:
+    fail_if_any:
+      - {line: '^(radius|tacacs)-server .*(?<!encrypted-)\bkey \S'}
+    otherwise: pass
+    note: Cisco SB stores keys as "encrypted-key" unless entered as a plain "key".
+    remediation: |
+      radius-server host <ip> key <new-key>   ! re-enter; shown afterwards as encrypted-key
+      ! rotate the key on the RADIUS server too
+
+  LYSS-VULN-001:
+    firmware: true
+    otherwise: unknown
+    note: Model/firmware not collected, or platform not yet in data/firmware.yaml.
+    remediation: |
+      ! still supported 250/350/350X/550X: upgrade to the latest 2.5.9.x (>= 2.5.9.16); CBS: >= 3.3.0.16
+      ! past end of support (200/300/500, SRW, SG350-52P/28P/10P since 2026-10-31): plan the replacement,
+      ! and meanwhile disable the web UI (no ip http server / no ip http secure-server) and restrict
+      ! management access to the admin network (LYSS-MGMT-010)
+
+  LYSS-BKP-001:
+    backup: true   # vendor-neutral: evaluated from the LYSS configuration archive / attestation
+    otherwise: unknown
+    note: No backup evidence yet. Enable scheduled scans, or attest the external backup system on the switch page.
+    remediation: |
+      ! Settings > Scheduled scans (LYSS keeps every configuration version), or
+      ! attest the external backup (Oxidized, RANCID...) on the switch page.
+
+  # ---------------- Level 2 ----------------
+
+  LYSS-AUTH-010:
+    pass_if_all:
+      - {line: '^aaa authentication login (?:authorization )?\S+ (radius|tacacs)\b'}
+      - {line: '^(radius|tacacs)-server host '}
+    otherwise: fail
+    note: Logins must try RADIUS/TACACS+ first; "local radius" only uses RADIUS for unknown users.
+    remediation: |
+      radius-server host <nps-ip> key <key>
+      aaa authentication login authorization default radius local
+      aaa authentication enable authorization default radius enable
+      line ssh
+       login authentication default
+      exit
+
+  LYSS-AUTH-011:
+    fail_if_any:
+      - {line: '^snmp-server community '}
+      - {line: '^snmp-server group \S+ v(1|2)\b'}
+    otherwise: pass
+    remediation: |
+      no snmp-server community <name>
+      snmp-server group LYSS v3 priv read Default
+      snmp-server user <user> LYSS v3 auth sha <pw> priv <pw>
+
+  LYSS-MGMT-010:
+    pass_if_all:
+      - {line: '^management access-class \S+'}
+    otherwise: fail
+    remediation: |
+      management access-list MGMT
+       permit ip-source <admin-subnet> mask <mask>
+      exit
+      management access-class MGMT
+
+  LYSS-MGMT-011:
+    fail_if_any:
+      - {block: '^interface vlan 1$', line: '^ip address (\d|dhcp)'}
+    pass_if_any:
+      - {block: '^interface vlan (?!1$)\d+$', line: '^ip address \d'}
+    otherwise: unknown
+    remediation: |
+      interface vlan <mgmt-vlan>
+       ip address <ip> <mask>
+      exit
+      ! then remove the VLAN 1 address once the new one is reachable
+
+  LYSS-MGMT-012:
+    pass_if_any:
+      - {line: '^banner (login|motd|exec)\b'}
+    otherwise: fail
+    remediation: |
+      banner login ^
+      Authorized access only. Activity is logged.
+      ^
+
+  LYSS-MGMT-013:
+    fail_if_any: &weak_ssh
+      - {state: '^kex: .*(sha1|group1\b)', section: ssh negotiated}
+      - {state: '^cipher: .*(cbc|3des|arcfour|blowfish)', section: ssh negotiated}
+      - {state: '^hostkey: (ssh-rsa|ssh-dss)\s*$', section: ssh negotiated}
+    pass_if_any:
+      - {state: '^kex: ', section: ssh negotiated}
+    otherwise: unknown
+    note: Needs the negotiated SSH algorithms (collector).
+    remediation: |
+      ! Cisco SB: SHA-2 key exchange needs recent firmware (250/350: latest 2.5.9.x);
+      ! the 200/300/500 series cannot be fixed -> plan replacement, and meanwhile
+      ! restrict management access (LYSS-MGMT-010) to the admin network only.
+      crypto key generate rsa   ! regenerate a 2048-bit key after upgrading
+
+  LYSS-LOG-010:
+    pass_if_any:
+      - {line: '^logging host \S+'}
+    otherwise: fail
+    remediation: |
+      logging host <siem-ip> severity informational
+
+  LYSS-LOG-011:
+    pass_if_any:
+      - {line: '^sntp server \S+'}
+    otherwise: fail
+    remediation: |
+      clock source sntp
+      sntp unicast client enable
+      sntp server <ntp-ip> poll
+
+  LYSS-ACC-010:
+    fail_if_any:
+      - ports_in_both:
+          - {section: show interfaces status, line: '^((?:gi|te|fa)\S+)\s.*\sDown\s'}
+          - {section: show interfaces configuration, line: '^((?:gi|te|fa)\S+)\s.*\sUp\s+\S+\s+\S+\s*$'}
+    pass_if_any:
+      - {state: '.', section: show interfaces configuration}
+    otherwise: unknown
+    note: Needs "show interfaces status" and "show interfaces configuration".
+    remediation: |
+      interface range <unused-ports>
+       shutdown
+       switchport access vlan <parking-vlan>
+      exit
+
+  LYSS-ACC-011:
+    # edge ports = every port, minus trunk/general/LAG ports in the config and ports where
+    # LLDP sees a pure bridge ("B", not "B, W" access points) or CDP sees a switch ("S")
+    fail_if_any:
+      - edge_ports_missing: &edge
+          ports: {section: show interfaces status, line: '^((?:gi|te|fa)\S+)\s'}
+          uplink_config: '^(switchport mode (trunk|general)|channel-group)\b'
+          uplink_state:
+            - {section: show lldp neighbors, line: '^((?:gi|te|fa)\S+)\s.*\sB\s+\d+\s*$'}
+            - {section: show cdp neighbors, line: '^\s*\S+\s+((?:gi|te|fa)\S+)\s+\d+\s+\d+\s+[A-Za-z ]*\bS\b'}
+          require: '^spanning-tree bpduguard enable'
+    pass_if_any:
+      - {edge_ports_missing: *edge, absent: true}
+    otherwise: unknown
+    note: Needs "show interfaces status" and neighbour tables (LLDP/CDP) to tell edge ports from uplinks.
+    remediation: |
+      ! only on edge ports (users, printers, APs, servers) - never on links to other switches
+      interface range <edge-ports>
+       spanning-tree bpduguard enable
+      exit

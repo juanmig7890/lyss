@@ -1,0 +1,36 @@
+collected: 2026-11-03 02:00
+===== ssh banner =====
+SSH-2.0-Cisco-1.25
+===== ssh negotiated =====
+kex: ecdh-sha2-nistp256
+cipher: aes256-ctr
+mac: hmac-sha2-256
+hostkey: rsa-sha2-256
+===== show version =====
+Cisco IOS Software, C1000 Software (C1000-UNIVERSALK9-M), Version 15.2(7)E14, RELEASE SOFTWARE (fc1)
+Base Ethernet MAC Address          : 02:00:00:00:00:10
+===== show inventory =====
+NAME: "1", DESCR: "C1000-24T-4G-L"
+PID: C1000-24T-4G-L    , VID: V01  , SN: FAKE0000010
+===== show ip ssh =====
+SSH Enabled - version 2.0
+===== show control-plane host open-ports =====
+Active internet connections (servers and established)
+Prot               Local Address             Foreign Address                  Service    State
+ tcp                        *:22                         *:0               SSH-Server   LISTEN
+ tcp                       *:443                         *:0                HTTP CORE   LISTEN
+===== show interfaces status =====
+Port      Name               Status       Vlan       Duplex  Speed Type
+Gi1/0/1   desk               connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/2                      disabled     1            auto   auto 10/100/1000BaseTX
+===== show lldp neighbors =====
+Capability codes:
+    (R) Router, (B) Bridge, (T) Telephone, (C) DOCSIS Cable Device
+Device ID           Local Intf     Hold-time  Capability      Port ID
+Total entries displayed: 0
+===== show cdp neighbors =====
+Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge
+Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID
+Total cdp entries displayed : 0
+===== show lldp neighbors detail =====
+===== show cdp neighbors detail =====

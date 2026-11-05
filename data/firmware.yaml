@@ -1,0 +1,105 @@
+# LYSS firmware knowledge base, used by LYSS-VULN-001.
+# Only verified facts, each with its source. Unknown platforms stay "unknown" (never guessed).
+#
+# models:          regex on the PID reported by the device (show inventory); first match wins,
+#                  so specific models come before series-wide entries
+# end_of_support:  date after which the vendor publishes no more security fixes (YYYY-MM-DD)
+# advisories:      critical (CVSS >= 9.0) or known-exploited (CISA KEV) vulnerabilities;
+#                  fixed_in null = the vendor will not fix this platform
+# verified:        date the entry was last checked against its sources
+platforms:
+
+  # ---------------- Cisco Small Business / Business ----------------
+
+  - vendor: cisco_sb
+    # SRW20xx/SRW22xx-K9 are the original part numbers of the 300 Series (e.g. SRW2024P = SG300-24P)
+    models: '^S[GF](200|300|500)-|^SRW2\d{3}'
+    family: Cisco Small Business 200/300/500
+    end_of_support: 2023-10-31
+    advisories:
+      - id: cisco-sa-sg-web-multi-S9g4Nkgv (CVE-2023-20159/20160/20161/20189)
+        cvss: 9.8
+        fixed_in: null
+        note: Unauthenticated remote code execution through the web UI; Cisco "has not and will not" release fixes.
+    source: >-
+      https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sg-web-multi-S9g4Nkgv ;
+      end of support from Cisco model pages (e.g. https://www.cisco.com/c/nl_nl/support/switches/sg300-28p-28-port-gigabit-poe-managed-switch/model.html)
+    verified: 2026-11-03
+
+  - vendor: cisco_sb
+    models: '^SG350-(52P|28P|10P)-'
+    family: Cisco 350 Series (bulletin EOL13836)
+    end_of_support: 2026-10-31
+    advisories: &sb350
+      - id: cisco-sa-sg-web-multi-S9g4Nkgv (CVE-2023-20159/20160/20161/20189)
+        cvss: 9.8
+        fixed_in: 2.5.9.16
+        note: Unauthenticated remote code execution through the web UI.
+    source: https://www.cisco.com/c/en/us/products/collateral/switches/350-series-managed-switches/eos-eol-notice-c51-2442364.html
+    verified: 2026-11-03
+
+  - vendor: cisco_sb
+    models: '^(SG350-(10SFP|28SFP|8PD)|SF350-48|SF352-08)-'
+    family: Cisco 350 Series (bulletin EOL14638)
+    end_of_support: 2027-07-31
+    advisories: *sb350
+    source: https://www.cisco.com/c/en/us/products/collateral/switches/350-series-managed-switches/350-series-managed-switches-select-models-eol.html
+    verified: 2026-11-03
+
+  - vendor: cisco_sb
+    models: '^(SF350-(24|24P|24MP|48P)|SF352-08P)-'
+    family: Cisco 350 Series (bulletin EOL14806)
+    end_of_support: 2028-01-31
+    advisories: *sb350
+    source: https://www.cisco.com/c/en/us/products/collateral/switches/350-series-managed-switches/350-series-managed-switches-eol.html
+    verified: 2026-11-03
+
+  - vendor: cisco_sb
+    models: '^S[GF](250|350|350X|550X)'
+    family: Cisco 250/350/350X/550X (other models; end of support not recorded)
+    advisories: *sb350
+    source: https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sg-web-multi-S9g4Nkgv
+    verified: 2026-11-03
+
+  - vendor: cisco_sb
+    models: '^CBS(250|350)-'
+    family: Cisco Business 250/350
+    advisories:
+      - id: cisco-sa-sg-web-multi-S9g4Nkgv (CVE-2023-20159/20160/20161/20189)
+        cvss: 9.8
+        fixed_in: 3.3.0.16
+        note: Unauthenticated remote code execution through the web UI.
+    source: https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sg-web-multi-S9g4Nkgv
+    verified: 2026-11-03
+
+  # ---------------- Cisco Catalyst (classic IOS) ----------------
+
+  - vendor: cisco_ios
+    models: '^(NAL-)?C1000(FE)?-'
+    family: Cisco Catalyst 1000 (IOS 15.2(7)E)
+    # end of vulnerability/security support (bulletins EOL15390 / EOL15537); last date of support 2030-04-30
+    end_of_support: 2028-04-29
+    advisories:
+      - id: cisco-sa-snmp-x4LPhte (CVE-2025-20352, SNMP)
+        cvss: 7.7
+        kev: true
+        fixed_in: 15.2(7)E13
+        note: Exploited in the wild (CISA KEV, 2025-09-29); fix CSCwq31287 listed in the 15.2(7)E13 release notes. Latest release 15.2(7)E14.
+    source: >-
+      https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmp-x4LPhte ;
+      https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst1000/software/releases/15_2_7_e/release_notes/ol_15_2_7_e_c1000.html ;
+      https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-1000-series-switches/catalyst-1000-series-switches-eol.html
+    verified: 2026-11-03
+
+  # ---------------- HPE Aruba AOS-S (ProCurve / ArubaOS-Switch) ----------------
+
+  - vendor: hp_procurve
+    models: '.'
+    family: HPE Aruba AOS-S (16.x, and older ProCurve branches)
+    advisories:
+      - id: HPESBNW05156 (CVE-2026-76742/76743/76744/76745/76746/76747)
+        cvss: 9.8
+        fixed_in: 16.11.0032
+        note: Authentication bypass and unauthenticated RCE; only the 16.11 branch is fixed, older branches are presumed affected and not covered.
+    source: https://csaf.arubanetworking.hpe.com/2026/hpe_networking_-_hpesbnw05156.txt
+    verified: 2026-11-03

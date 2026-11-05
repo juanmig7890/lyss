@@ -1,0 +1,15 @@
+# Same hardened HPE Aruba switch, but only its configuration (no device state, no backup
+# evidence): controls that need state must say "unknown", never guess. Model and firmware come
+# from the configuration header ("; JL253A Configuration Editor; Created on release #WC.16.11.0032").
+vendor: hp_procurve
+config_from: hp-hardened
+level: 0
+verdicts:
+  LYSS-MGMT-001: pass      # "no telnet-server" is explicit in the configuration
+  LYSS-MGMT-002: unknown   # SSH protocol version needs the banner
+  LYSS-MGMT-003: pass
+  LYSS-VULN-001: pass      # model and release read from the configuration header
+  LYSS-BKP-001: unknown
+  LYSS-MGMT-013: unknown
+  LYSS-ACC-010: unknown
+  LYSS-ACC-011: unknown

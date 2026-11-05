@@ -1,0 +1,16 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{# Sparkline of a numeric series (e.g. failed controls per scan). Pure SVG attributes: CSP-safe. #}
+{% macro spark(values, w=240, h=44, cls="spark") %}
+{% set n = values|length %}
+{% if n > 1 %}
+{% set top = [values|max, 1]|max %}
+<svg class="{{ cls }}" viewBox="0 0 {{ w }} {{ h }}" width="{{ w }}" height="{{ h }}" role="img" aria-label="Trend: {{ values|join(', ') }}">
+  <polyline points="{% for v in values %}{{ (loop.index0 * (w - 8) / (n - 1) + 4)|round(1) }},{{ (h - 5 - (v / top) * (h - 12))|round(1) }} {% endfor %}"/>
+  {% set last = values[-1] %}
+  <circle cx="{{ w - 4 }}" cy="{{ (h - 5 - (last / top) * (h - 12))|round(1) }}" r="3"/>
+</svg>
+{% else %}
+<div class="muted small">Trend appears after two scans.</div>
+{% endif %}
+{% endmacro %}

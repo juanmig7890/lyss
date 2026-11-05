@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screenshots — LYSS</title>
+<meta name="description" content="Screenshots of the LYSS switch security assessment tool, on a fictitious demo network.">
+<meta name="author" content="Mouad Lyaazale">
+<link rel="canonical" href="https://lyss.dev/screenshots.html">
+<meta property="og:site_name" content="LYSS">
+<meta property="og:title" content="LYSS screenshots — switch security audit on a demo network">
+<meta property="og:description" content="Dashboard, findings with evidence, topology, control matrix and remediation, on a fictitious network.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lyss.dev/screenshots.html">
+<meta property="og:image" content="https://lyss.dev/img/og-lyss.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0d6b47">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script src="lang.js" defer></script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="index.html" aria-label="LYSS home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 6.5v8.2c0 7.3 5 13.4 12 15.3 7-1.9 12-8 12-15.3V6.5Z" fill="currentColor"/><g class="lines"><rect x="9" y="11" width="14" height="2.2" rx="1.1"/><rect x="9" y="15" width="14" height="2.2" rx="1.1"/><rect x="9" y="19" width="9" height="2.2" rx="1.1"/><circle cx="21.5" cy="20.1" r="1.6"/></g></svg>
+      <span>LYSS</span>
+    </a>
+    <nav aria-label="Sections">
+      <a href="index.html#levels"><span class="en">Levels</span><span class="fr">Niveaux</span></a>
+      <a href="index.html#how"><span class="en">How it works</span><span class="fr">Fonctionnement</span></a>
+      <a href="screenshots.html" aria-current="page"><span class="en">Screenshots</span><span class="fr">Captures</span></a>
+      <a href="index.html#open"><span class="en">Open</span><span class="fr">Ouvert</span></a>
+    </nav>
+    <div class="langs" role="group" aria-label="Language">
+      <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-set-lang="fr" aria-pressed="false">FR</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="page-head">
+  <div class="wrap">
+    <p class="kicker"><span class="en">Screenshots</span><span class="fr">Captures d'écran</span></p>
+    <h1><span class="en">The LYSS tool, on a demo network</span><span class="fr">L'outil LYSS, sur un réseau de démonstration</span></h1>
+    <p class="lead"><span class="en">Every name, address and result below is fictitious: six simulated switches (Cisco IOS, Cisco Small Business, HPE Aruba) created by LYSS's own demo mode. Click an image to enlarge it.</span><span class="fr">Tous les noms, adresses et résultats ci-dessous sont fictifs : six switchs simulés (Cisco IOS, Cisco Small Business, HPE Aruba) créés par le mode démonstration de LYSS. Cliquez sur une image pour l'agrandir.</span></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap gallery">
+    <figure class="shot">
+      <a href="img/login.jpg"><img src="img/login.jpg" width="2160" height="1350" alt="LYSS sign-in page with a zellige pattern and the map of Morocco"></a>
+      <figcaption>
+        <h2><span class="en">Runs on your machine</span><span class="fr">Fonctionne sur votre poste</span></h2>
+        <p><span class="en">A local web interface protected by an administrator password. Credentials are encrypted and configurations never leave your network.</span><span class="fr">Une interface web locale protégée par un mot de passe administrateur. Les identifiants sont chiffrés et les configurations ne quittent jamais votre réseau.</span></p>
+      </figcaption>
+    </figure>
+
+    <figure class="shot">
+      <a href="img/dashboard.jpg"><img src="img/dashboard.jpg" width="2160" height="1350" loading="lazy" alt="Dashboard: six switches with their LYSS level, passed and failed controls, and the most frequent issues"></a>
+      <figcaption>
+        <h2><span class="en">Fleet overview</span><span class="fr">Vue d'ensemble du parc</span></h2>
+        <p><span class="en">Every switch with its model, firmware, conformance level and controls, plus the issues that affect most of the network.</span><span class="fr">Chaque switch avec son modèle, son firmware, son niveau de conformité et ses contrôles, ainsi que les problèmes qui touchent le plus le réseau.</span></p>
+      </figcaption>
+    </figure>
+
+    <figure class="shot">
+      <a href="img/device.jpg"><img src="img/device.jpg" width="2160" height="1350" loading="lazy" alt="Switch report: each failed control with its evidence lines and the recommended fix"></a>
+      <figcaption>
+        <h2><span class="en">Evidence for every verdict</span><span class="fr">Une preuve pour chaque verdict</span></h2>
+        <p><span class="en">The configuration lines and device state behind each result, the recommended fix and the ISO 27001 controls it supports. Secrets are always redacted.</span><span class="fr">Les lignes de configuration et l'état de l'équipement derrière chaque résultat, la correction recommandée et les mesures ISO 27001 concernées. Les secrets sont toujours masqués.</span></p>
+      </figcaption>
+    </figure>
+
+    <figure class="shot">
+      <a href="img/topology.jpg"><img src="img/topology.jpg" width="2160" height="1350" loading="lazy" alt="Topology map built from LLDP and CDP, switches coloured by LYSS level"></a>
+      <figcaption>
+        <h2><span class="en">Topology, built automatically</span><span class="fr">Topologie construite automatiquement</span></h2>
+        <p><span class="en">From LLDP/CDP neighbour tables, coloured by conformance level. Switches that are on the network but not yet in LYSS appear too.</span><span class="fr">À partir des tables de voisins LLDP/CDP, colorée par niveau de conformité. Les switchs présents sur le réseau mais pas encore dans LYSS apparaissent aussi.</span></p>
+      </figcaption>
+    </figure>
+
+    <figure class="shot">
+      <a href="img/matrix.jpg"><img src="img/matrix.jpg" width="2160" height="1350" loading="lazy" alt="Control matrix: every control on every switch"></a>
+      <figcaption>
+        <h2><span class="en">Control matrix</span><span class="fr">Matrice des contrôles</span></h2>
+        <p><span class="en">Every control on every switch in one table, to plan the work and follow progress.</span><span class="fr">Tous les contrôles de tous les switchs dans un seul tableau, pour planifier les travaux et suivre les progrès.</span></p>
+      </figcaption>
+    </figure>
+
+    <figure class="shot">
+      <a href="img/remediation.jpg"><img src="img/remediation.jpg" width="2160" height="1350" loading="lazy" alt="Remediation page: low-risk fixes to select, with commands and rollback"></a>
+      <figcaption>
+        <h2><span class="en">Optional, safe remediation</span><span class="fr">Correction optionnelle et sûre</span></h2>
+        <p><span class="en">Off by default. You choose low-risk fixes, see their commands and rollback, and LYSS applies them one switch at a time with verification and automatic rollback.</span><span class="fr">Désactivée par défaut. Vous choisissez des corrections à faible risque, voyez leurs commandes et leur retour arrière, et LYSS les applique switch par switch avec vérification et annulation automatique.</span></p>
+      </figcaption>
+    </figure>
+
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <p>© 2026 Mouad Lyaazale · <span class="en">Specification CC BY 4.0 · Software AGPL v3</span><span class="fr">Spécification CC BY 4.0 · Logiciel AGPL v3</span></p>
+    <p class="made"><span class="en">Designed in Morocco</span><span class="fr">Conçu au Maroc</span></p>
+  </div>
+</footer>
+</body>
+</html>

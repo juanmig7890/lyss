@@ -1,0 +1,11 @@
+.git
+.github
+.venv
+private
+reports
+tests
+tools
+**/__pycache__
+*.egg-info
+*.cred.xml
+Start-LYSS.cmd

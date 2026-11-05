@@ -1,0 +1,47 @@
+collected: 2026-11-03 02:00
+===== ssh banner =====
+SSH-1.99-Mocana SSH 5.8
+===== ssh negotiated =====
+kex: diffie-hellman-group14-sha1
+cipher: aes128-cbc
+mac: hmac-sha1
+hostkey: ssh-rsa
+===== show version =====
+Image stamp:    /ws/swbuildm/rel_yakima_qaoff/code/build/lakes(swbuildm_rel_yakima_qaoff_rel_yakima)
+                Feb 10 2022 09:41:06
+                YA.16.10.0012
+                1036
+Boot Image:     Primary
+===== show system =====
+ Status and Counters - General System Information
+
+  System Name        : LAB-HP-WEAK
+  Software revision  : YA.16.10.0012        Base MAC Addr      : 0000ab-000002
+  ROM Version        : YA.15.20              Serial Number      : CN00FAKE02
+===== show modules =====
+ Status and Counters - Module Information
+
+  Chassis: 2530-24G J9776A                 Serial Number:   CN00FAKE02
+===== show ip ssh =====
+  SSH Enabled     : Yes                 Secure Copy Enabled : No
+  TCP Port Number : 22                  Timeout (sec)       : 120
+  Host Key Type   : RSA                 Host Key Size       : 1024
+===== show interfaces brief =====
+ Status and Counters - Port Status
+
+                          | Intrusion                           MDI   Flow Bcast
+  Port         Type       | Alert     Enabled Status Mode       Mode  Ctrl Limit
+  ------------ ---------- + --------- ------- ------ ---------- ----- ---- ------
+  1            100/1000T  | No        Yes     Up     1000FDx    MDIX  off  0
+  2            100/1000T  | No        Yes     Down   1000FDx    Auto  off  0
+  3            100/1000T  | No        Yes     Down   1000FDx    Auto  off  0
+  4            100/1000T  | No        Yes     Up     1000FDx    MDIX  off  0
+  25-Trk1      1000SX     | No        Yes     Up     1000FDx    NA    off  0
+  26-Trk1      1000SX     | No        Yes     Up     1000FDx    NA    off  0
+===== show lldp info remote-device =====
+ LLDP Remote Devices Information
+
+  LocalPort | ChassisId                 PortId PortDescr SysName
+  --------- + ------------------------- ------ --------- ----------------------
+  25        | 00 00 5e 00 53 01         47     47        LAB-CORE
+  26        | 00 00 5e 00 53 01         48     48        LAB-CORE

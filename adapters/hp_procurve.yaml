@@ -1,0 +1,237 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE.
+# LYSS adapter: HP ProCurve / HPE Aruba AOS-S (ArubaOS-Switch: 2530, 2540, 2920, 2930F/M, 3810, 5400R...).
+# Rule forms: see adapters/cisco_ios.yaml.
+# AOS-S lists ports as ranges on global lines ("untagged 1-24", "trunk 25-26 trk1 lacp",
+# "spanning-tree 1-24 bpdu-protection"): edge-port rules use uplink_lists / require_lists.
+# Credentials only appear in the config when "include-credentials" is enabled.
+adapter: hp_procurve
+spec_version: "0.4.0-draft"
+platform: HP ProCurve / HPE Aruba AOS-S
+status: draft, validated on synthetic AOS-S 16.10 / 16.11 outputs (no real device yet)
+
+facts:
+  model:
+    - {section: show modules, line: 'Chassis:\s+(.+?)\s{2,}'}
+    # configuration header: "; JL253A Configuration Editor; Created on release #WC.16.11.0032"
+    - {section: config comments, line: '^;\s*(J[A-Z]?\d{3,4}[A-Z])\s+Configuration Editor'}
+  version:
+    - {section: show version, line: '^\s*([A-Z]{1,2}\.\d{2}\.\d{2}\.\d{4})\s*$'}
+    - {section: show system, line: 'Software revision\s*:\s*([A-Z]{1,2}\.[\d.]+)'}
+    - {section: config comments, line: 'Created on release #([A-Z]{1,2}\.[\d.]+)'}
+
+checks:
+
+  # ---------------- Level 1 ----------------
+
+  LYSS-MGMT-001:
+    fail_if_any:
+      - {line: '^telnet-server\s*$'}
+    pass_if_any:
+      - {line: '^no telnet-server\s*$'}
+    otherwise: fail
+    note: The Telnet server is enabled by default; only "no telnet-server" appears in the configuration.
+    remediation: |
+      no telnet-server
+
+  LYSS-MGMT-002:
+    fail_if_any:
+      - {state: '^SSH-1\.', section: ssh banner}
+    pass_if_any:
+      - {state: '^SSH-2\.0-', section: ssh banner}
+      - {line: '^ip ssh version 2\s*$'}
+    otherwise: unknown
+    note: Older firmware defaults to "1-or-2"; recent firmware is SSHv2 only. Collect the SSH banner.
+    remediation: |
+      ip ssh version 2
+
+  LYSS-MGMT-003:
+    fail_if_any:
+      - {line: '^web-management plaintext\b'}
+    pass_if_any:
+      - {line: '^no web-management( plaintext)?\s*$'}
+    otherwise: fail
+    note: Plaintext web management (HTTP) is enabled by default.
+    remediation: |
+      web-management ssl            ! only if the web interface is really needed (needs a certificate)
+      no web-management plaintext
+
+  LYSS-MGMT-004:
+    fail_if_any:
+      - {line: '^console idle-timeout 0\s*$'}
+      - {line: '^console idle-timeout (\d+)\s*$', gt: 600}
+    pass_if_all:
+      - {line: '^console idle-timeout \d+\s*$'}
+    otherwise: fail
+    note: The default idle timeout is 0 (never). The value is in seconds and covers console, Telnet and SSH sessions.
+    remediation: |
+      console idle-timeout 600
+      console idle-timeout serial-usb 600
+
+  LYSS-AUTH-001:
+    fail_if_any:
+      - {line: '(?i)^snmp-server community "?(public|private)"?'}
+    otherwise: pass
+    note: The factory configuration ships with community "public".
+    remediation: |
+      no snmp-server community "public"
+
+  LYSS-AUTH-002:
+    fail_if_any:
+      - {line: '^password manager .*\bplaintext\b'}
+    pass_if_all:
+      - {line: '^password manager .*\bsha(1|256)\b'}
+    otherwise: unknown
+    note: Manager password not visible (include-credentials off) or not set; confirm on the device.
+    remediation: |
+      password manager user-name <name> plaintext <new-secret>   ! stored as a hash by the switch
+      encrypt-credentials
+
+  LYSS-AUTH-003:
+    fail_if_any:
+      - {line: '^password (manager|operator) .*\bplaintext\b'}
+    pass_if_all:
+      - {line: '^include-credentials\b'}
+    otherwise: unknown
+    note: Local credentials are only visible with include-credentials.
+    remediation: |
+      encrypt-credentials
+
+  LYSS-AUTH-004:
+    fail_if_any:
+      - {line: '^(radius|tacacs)-server .*(?<!encrypted-)\bkey\s'}
+    otherwise: pass
+    note: Keys appear only with include-credentials; "encrypt-credentials" stores them as encrypted-key.
+    remediation: |
+      encrypt-credentials
+      ! then rotate the shared key on the switch AND on the RADIUS/TACACS+ server
+
+  LYSS-VULN-001:
+    firmware: true
+    otherwise: unknown
+    note: Model/firmware not collected and not in the configuration header, or platform not yet in data/firmware.yaml.
+    remediation: |
+      ! upgrade to the latest AOS-S 16.11 release (>= 16.11.0032 fixes HPESBNW05156)
+      ! older branches (15.x, 16.10 and before) are not fixed: upgrade the branch or replace the switch
+      ! until then, restrict management access to the admin network (LYSS-MGMT-010)
+
+  LYSS-BKP-001:
+    backup: true   # vendor-neutral: evaluated from the LYSS configuration archive / attestation
+    otherwise: unknown
+    note: No backup evidence yet. Enable scheduled scans, or attest the external backup system on the switch page.
+    remediation: |
+      ! Settings > Scheduled scans (LYSS keeps every configuration version), or
+      ! attest the external backup (Oxidized, RANCID...) on the switch page.
+
+  # ---------------- Level 2 ----------------
+
+  LYSS-AUTH-010:
+    pass_if_all:
+      - {line: '^aaa authentication ssh login (radius|tacacs)\b'}
+      - {line: '^(radius|tacacs)-server host '}
+    otherwise: fail
+    note: SSH logins must try RADIUS/TACACS+ first, with the local account as fallback only.
+    remediation: |
+      radius-server host <nps-ip> key <key>
+      aaa authentication ssh login radius local
+      aaa authentication ssh enable radius local
+
+  LYSS-AUTH-011:
+    fail_if_any:
+      - {line: '^snmp-server community '}
+    otherwise: pass
+    remediation: |
+      no snmp-server community <name>
+      snmpv3 enable
+      snmpv3 only
+      snmpv3 user <user> auth sha <pw> priv aes <pw>
+
+  LYSS-MGMT-010:
+    pass_if_all:
+      - {line: '^ip authorized-managers \S+'}
+    otherwise: fail
+    remediation: |
+      ip authorized-managers <admin-subnet> <mask> access manager
+
+  LYSS-MGMT-011:
+    fail_if_any:
+      - {block: '^vlan 1$', line: '^ip address (\d|dhcp)'}
+    pass_if_any:
+      - {line: '^management-vlan \d+'}
+      - {block: '^vlan (?!1$)\d+$', line: '^ip address \d'}
+    otherwise: unknown
+    remediation: |
+      vlan <mgmt-vlan>
+       ip address <ip> <mask>
+      exit
+      management-vlan <mgmt-vlan>
+      ! then remove the VLAN 1 address once the new one is reachable
+
+  LYSS-MGMT-012:
+    pass_if_any:
+      - {line: '^banner (motd|exec)\b'}
+    otherwise: fail
+    remediation: |
+      banner motd "Authorized access only. Activity is logged."
+
+  LYSS-MGMT-013:
+    fail_if_any:
+      - {state: '^kex: .*(sha1|group1\b)', section: ssh negotiated}
+      - {state: '^cipher: .*(cbc|3des|arcfour|blowfish)', section: ssh negotiated}
+      - {state: '^hostkey: (ssh-rsa|ssh-dss)\s*$', section: ssh negotiated}
+    pass_if_any:
+      - {state: '^kex: ', section: ssh negotiated}
+    otherwise: unknown
+    note: Needs the negotiated SSH algorithms (collector).
+    remediation: |
+      ip ssh cipher aes256-ctr aes192-ctr aes128-ctr
+      ip ssh mac hmac-sha2-256 hmac-sha2-512
+      ip ssh kex ecdh-sha2-nistp256 ecdh-sha2-nistp384
+      crypto key generate ssh rsa bits 2048   ! older firmware may lack these options: upgrade AOS-S
+
+  LYSS-LOG-010:
+    pass_if_any:
+      - {line: '^logging \d+\.\d+\.\d+\.\d+'}
+    otherwise: fail
+    remediation: |
+      logging <siem-ip>
+      logging severity info
+
+  LYSS-LOG-011:
+    pass_if_any:
+      - {line: '^sntp server (priority \d+ )?\S+'}
+      - {line: '^ntp server \S+'}
+    otherwise: fail
+    remediation: |
+      timesync sntp
+      sntp unicast
+      sntp server priority 1 <ntp-ip>
+
+  LYSS-ACC-010:
+    fail_if_any:
+      # "show interfaces brief": Enabled = Yes and Status = Down (enabled but nothing connected)
+      - {state: '^\s*[A-Z]?\d+(-Trk\d+)?\s.*\|\s+\S+\s+Yes\s+Down\b', section: show interfaces brief}
+    pass_if_any:
+      - {state: '^\s*[A-Z]?\d+(-Trk\d+)?\s.*\|', section: show interfaces brief, say: 'show interfaces brief: no port is enabled without a link'}
+    otherwise: unknown
+    note: Needs "show interfaces brief".
+    remediation: |
+      interface <unused-ports>
+       disable
+      exit
+
+  LYSS-ACC-011:
+    # edge ports = every port, minus trunk members and ports tagged in a VLAN (uplinks, APs with
+    # several VLANs); "spanning-tree <ports> bpdu-protection" must cover the rest
+    fail_if_any:
+      - edge_ports_missing: &edge
+          ports: {section: show interfaces brief, line: '^\s*([A-Z]?\d+)(?:-Trk\d+)?\s.*\|'}
+          uplink_lists: ['^trunk (\S+) ', '^tagged (\S+)']
+          require_lists: '^spanning-tree (\S+) bpdu-protection'
+    pass_if_any:
+      - {edge_ports_missing: *edge, absent: true}
+    otherwise: unknown
+    note: Needs "show interfaces brief" to know the ports; trunk and tagged ports count as uplinks.
+    remediation: |
+      ! only on edge ports (users, printers, APs, servers) - never on links to other switches
+      spanning-tree <edge-ports> bpdu-protection

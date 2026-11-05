@@ -1,0 +1,23 @@
+# OVH web hosting (Apache): HTTPS only and strict security headers for lyss.dev
+RewriteEngine On
+# one address: www.lyss.dev -> https://lyss.dev
+RewriteCond %{HTTP_HOST} ^www\.lyss\.dev$ [NC]
+RewriteRule ^ https://lyss.dev%{REQUEST_URI} [L,R=301]
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  Header always set Content-Security-Policy "default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "no-referrer"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always unset X-Powered-By
+</IfModule>
+
+Options -Indexes
+AddType image/svg+xml .svg
+AddType font/woff2 .woff2
+AddDefaultCharset UTF-8

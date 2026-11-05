@@ -1,0 +1,45 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{% extends "base.html" %}
+{% block title %}Topology{% endblock %}
+{% block nav_topology %}active{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Topology</h1>
+    <p class="muted">Built automatically from LLDP/CDP neighbour tables collected at the last scan. Switches are coloured by {{ project }} level.</p>
+  </div>
+  <div class="actions topo-tools">
+    <label class="check"><input type="checkbox" id="topo-endpoints"> Show access points &amp; hosts</label>
+    <button class="btn btn-sm" type="button" id="topo-fit">Fit</button>
+    <button class="btn btn-sm btn-ghost" type="button" id="topo-reset" title="Forget the positions you dragged">Reset layout</button>
+  </div>
+</div>
+
+<div class="topo-wrap">
+  <div class="card topo-card">
+    <svg id="topo" class="topo" role="img" aria-label="Network topology"></svg>
+    <div class="topo-legend">
+      <span><i class="lg lg-l0"></i>Level 0</span>
+      <span><i class="lg lg-l1"></i>Level 1</span>
+      <span><i class="lg lg-l2"></i>Level 2</span>
+      <span><i class="lg lg-ext"></i>Not in {{ project }}</span>
+      <span><i class="lg-line"></i>Link seen from both ends</span>
+      <span><i class="lg-line lg-dash"></i>Seen from one end</span>
+      <span class="muted">Drag nodes · scroll to zoom · drag background to pan</span>
+    </div>
+  </div>
+  <aside class="card topo-panel" id="topo-panel">
+    <h2 id="tp-title">Select a node</h2>
+    <p class="muted" id="tp-sub">Click a switch to see its links and ports.</p>
+    <dl class="tp-facts" id="tp-facts"></dl>
+    <ul class="tp-links" id="tp-links"></ul>
+    <div class="actions">
+      <a class="btn btn-sm" id="tp-report" href="#" hidden>Open security report</a>
+      <button class="btn btn-sm btn-ghost" type="button" id="tp-root" hidden>Put at top of map</button>
+    </div>
+  </aside>
+</div>
+<p class="muted note-small" id="topo-empty" hidden>No neighbour data yet: scan the switches first (LLDP/CDP must be enabled on them).</p>
+<script src="/static/topology.js" defer></script>
+{% endblock %}

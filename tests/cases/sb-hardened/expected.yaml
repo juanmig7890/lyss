@@ -1,0 +1,25 @@
+# Cisco Business 350 hardened to Level 2. Synthetic data (documentation addresses, fake hashes).
+vendor: cisco_sb
+backup: {automatic_days_ago: 1}
+level: 2
+verdicts:
+  LYSS-MGMT-001: pass
+  LYSS-MGMT-002: pass
+  LYSS-MGMT-003: pass
+  LYSS-MGMT-004: pass
+  LYSS-AUTH-001: pass
+  LYSS-AUTH-002: pass
+  LYSS-AUTH-003: pass
+  LYSS-AUTH-004: pass
+  LYSS-VULN-001: pass
+  LYSS-BKP-001: pass
+  LYSS-AUTH-010: pass
+  LYSS-AUTH-011: pass
+  LYSS-MGMT-010: pass
+  LYSS-MGMT-011: pass
+  LYSS-MGMT-012: pass
+  LYSS-MGMT-013: pass
+  LYSS-LOG-010: pass
+  LYSS-LOG-011: pass
+  LYSS-ACC-010: pass
+  LYSS-ACC-011: pass

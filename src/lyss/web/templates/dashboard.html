@@ -1,0 +1,163 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{% extends "base.html" %}
+{% from "_macros.html" import spark %}
+{% block title %}Switches{% endblock %}
+{% block nav_switches %}active{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Switches{% if current_site %} · {{ site_names.get(current_site, "No site") }}{% endif %}</h1>
+    <p class="muted">Read-only assessment against the {{ project }} specification, Levels 1 and 2.{% if current_site %} <a href="/">Show all sites</a>{% endif %}</p>
+  </div>
+  <div class="actions">
+    <div class="menu">
+      <button class="btn" type="button" data-menu>Export ▾</button>
+      <div class="menu-list" hidden>
+        {% if current_site and current_site != "-" %}
+        <a href="/export/report.html?site={{ current_site|urlencode }}">{{ site_names[current_site] }} report (HTML, printable to PDF)</a>
+        <a href="/export/report.json?site={{ current_site|urlencode }}">{{ site_names[current_site] }} results (JSON)</a>
+        {% endif %}
+        <a href="/export/report.html">Fleet report (HTML, printable to PDF)</a>
+        <a href="/export/report.json">Fleet results (JSON)</a>
+        {% if ciso_enabled %}
+        <form method="post" action="/export/ciso">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button type="submit" class="menu-btn">Send report to CISO Assistant</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    <a class="btn" href="/devices/new">Add switch</a>
+    <form method="post" action="/scan">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      {% if current_site %}<input type="hidden" name="site" value="{{ current_site }}">{% endif %}
+      <button class="btn btn-primary" type="submit" data-scan {% if not rows %}disabled{% endif %}>{{ "Scan this site" if current_site else "Scan all" }}</button>
+    </form>
+  </div>
+</div>
+
+{% if site_rows %}
+<section class="card table-card sites-card">
+  <table class="table compact">
+    <thead><tr><th>Site</th><th>Switches</th><th>Scanned</th><th>Level 1</th><th>Level 2</th><th>Failed controls</th><th></th></tr></thead>
+    <tbody>
+      {% for s in site_rows %}
+      {% set key = s.id or "-" %}
+      <tr {% if current_site == key %}class="selected"{% endif %}>
+        <td><a class="strong" href="/?site={{ key|urlencode }}">{{ s.name }}</a></td>
+        <td>{{ s.devices }}</td>
+        <td>{{ s.scanned }}</td>
+        <td>{{ s.level1 }}<small class="muted"> / {{ s.devices }}</small></td>
+        <td>{{ s.level2 }}<small class="muted"> / {{ s.devices }}</small></td>
+        <td class="{{ 'text-fail' if s.fail }}">{{ s.fail }}</td>
+        <td class="row-actions">{% if s.id and s.scanned %}<a class="btn btn-sm btn-ghost" href="/export/report.html?site={{ s.id|urlencode }}">Report</a>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<div class="kpis">
+  <div class="kpi"><span>Switches</span><strong>{{ totals.devices }}</strong></div>
+  <div class="kpi"><span>Scanned</span><strong>{{ totals.scanned }}</strong></div>
+  <div class="kpi"><span>Level 1 reached</span><strong>{{ totals.level1 }}<small> / {{ totals.devices }}</small></strong></div>
+  <div class="kpi kpi-fail"><span>Failed controls</span><strong>{{ totals.fail }}</strong></div>
+  <div class="kpi"><span>Trend (failed controls / day)</span>{{ spark(trend|map(attribute="fail")|list, 200, 40) }}
+    <small class="muted">{% if schedule.enabled %}Scheduled {{ schedule.time }}{% else %}<a href="/settings">Schedule scans</a>{% endif %}</small></div>
+</div>
+
+{% if discovered %}
+<div class="alert alert-info">{{ discovered }} switch{{ "es" if discovered > 1 }} discovered on the network but not in {{ project }} yet. <a href="/discovery">Review</a></div>
+{% endif %}
+
+{% if not jump_ready and rows|selectattr("device.via_jump")|list %}
+<div class="alert alert-warn">Some switches are reached through a jump host, but none is configured. <a href="/settings">Configure it</a>.</div>
+{% endif %}
+
+<section class="card job" id="job" hidden>
+  <div class="job-head"><strong>Scan in progress</strong><span class="muted" id="job-count"></span></div>
+  <div class="progress"><div id="job-bar"></div></div>
+  <ul class="job-items" id="job-items"></ul>
+</section>
+
+{% if rows %}
+<div class="grid-main">
+  <div class="card table-card">
+    <div class="table-tools">
+      <input type="search" id="search" placeholder="Filter switches (name, address, model…)" aria-label="Filter switches">
+    </div>
+    <table class="table" id="devices">
+      <thead>
+        <tr><th>Switch</th><th>Model · firmware</th><th>Level</th><th>Controls</th><th>Last scan</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        {% set d = row.device %}{% set r = row.result %}
+        <tr data-search="{{ d.id }} {{ d.host }} {{ d.vendor }} {{ r.model if r }} {{ r.firmware if r }} {{ site_names.get(row.site, '') }}">
+          <td>
+            <a class="strong" href="/devices/{{ d.id }}">{{ d.id }}</a>
+            <div class="sub mono">{{ d.host }}{% if d.port != 22 %}:{{ d.port }}{% endif %}{% if d.via_jump %} <span class="tag" title="Reached through the jump host">jump</span>{% endif %}{% if row.site and not current_site %} <span class="tag" title="Site">{{ site_names.get(row.site, row.site) }}</span>{% endif %}</div>
+          </td>
+          <td>
+            {% if r and r.model %}{{ r.model }}<div class="sub mono">{{ r.firmware }}</div>
+            {% else %}<span class="muted">{{ d.vendor }}</span>{% endif %}
+          </td>
+          <td>
+            {% if r %}<span class="level level-{{ r.summary.achieved_level }}">Level {{ r.summary.achieved_level }}</span>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+          <td>
+            {% if r %}
+            {% set s = r.summary %}{% set total = s.pass + s.fail + s.unknown %}
+            <div class="bar" title="{{ s.pass }} pass · {{ s.fail }} fail · {{ s.unknown }} unknown">
+              <span class="seg-pass" data-w="{{ (100 * s.pass / total)|round(1) if total else 0 }}"></span>
+              <span class="seg-fail" data-w="{{ (100 * s.fail / total)|round(1) if total else 0 }}"></span>
+              <span class="seg-unknown" data-w="{{ (100 * s.unknown / total)|round(1) if total else 0 }}"></span>
+            </div>
+            <small class="muted">{{ s.pass }} pass · <span class="text-fail">{{ s.fail }} fail</span> · {{ s.unknown }} unknown</small>
+            {% else %}<span class="muted">not scanned</span>{% endif %}
+          </td>
+          <td class="muted nowrap">{{ r.scanned_at.replace("T", " ")[:16] if r else "—" }}</td>
+          <td class="row-actions">
+            <form method="post" action="/scan">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <input type="hidden" name="device_id" value="{{ d.id }}">
+              <button class="btn btn-sm" type="submit" data-scan>Scan</button>
+            </form>
+            <a class="btn btn-sm btn-ghost" href="/devices/{{ d.id }}/edit">Edit</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <aside class="card side">
+    <h2>Most frequent issues</h2>
+    {% if top %}
+    <ol class="top-issues">
+      {% for t in top %}
+      <li>
+        <div class="ti-head"><span class="mono cid">{{ t.control.id }}</span><span class="ti-count">{{ t.count }}/{{ totals.scanned }}</span></div>
+        <div>{{ t.control.title }}</div>
+        <div class="ti-bar"><span data-w="{{ (100 * t.count / totals.scanned)|round(1) }}"></span></div>
+      </li>
+      {% endfor %}
+    </ol>
+    <a class="btn btn-sm btn-ghost" href="/matrix">Open the control matrix →</a>
+    {% else %}
+    <p class="muted">Scan the switches to see where the fleet is weakest.</p>
+    {% endif %}
+  </aside>
+</div>
+{% else %}
+<div class="card empty">
+  <img src="/static/maroc.svg" alt="" width="120">
+  <h2>No switches yet</h2>
+  <p class="muted">Add a switch with its SSH address and a read-only account.</p>
+  <a class="btn btn-primary" href="/devices/new">Add your first switch</a>
+</div>
+{% endif %}
+{% endblock %}

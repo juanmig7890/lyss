@@ -1,0 +1,48 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{% extends "base.html" %}
+{% block title %}Control matrix{% endblock %}
+{% block nav_matrix %}active{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Control matrix</h1>
+    <p class="muted">Every control on every switch. Click a cell to open the switch report.</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="/export/report.html">Export report</a>
+  </div>
+</div>
+
+{% if rows %}
+<div class="card table-card">
+  <table class="table matrix">
+    <thead>
+      <tr>
+        <th>Control</th>
+        {% for r in rows %}<th class="dev"><a href="/devices/{{ r.device.id }}">{{ r.device.id }}</a></th>{% endfor %}
+        <th class="dev">Failing</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in fleet.controls %}
+      {% set fails = fleet.fail_counts.get(c.id, 0) %}
+      <tr>
+        <td>
+          <span class="mono cid">{{ c.id }}</span> <span class="tag">L{{ c.level }}</span>
+          <div>{{ c.title }}</div>
+        </td>
+        {% for r in rows %}{% set v = fleet.verdicts[r.device.id].get(c.id, "not_applicable") %}
+        <td class="cell"><a class="mcell m-{{ v }}" href="/devices/{{ r.device.id }}" title="{{ r.device.id }}: {{ v }}">{{ symbol[v] }}</a></td>
+        {% endfor %}
+        <td class="cell"><strong class="{{ 'text-fail' if fails else 'muted' }}">{{ fails }}</strong></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="muted legend">✓ pass · ✗ fail · ? unknown (evidence insufficient, never guessed) · – not applicable</p>
+{% else %}
+<div class="card empty"><h2>No results yet</h2><p class="muted">Scan the switches first.</p></div>
+{% endif %}
+{% endblock %}

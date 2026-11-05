@@ -1,0 +1,230 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE.
+# LYSS adapter: Cisco IOS / IOS-XE (Catalyst).
+# Rule forms:
+#   {line: R}                       true if any config line (top level or inside a block) matches R
+#   {block: H, line: R}             true if any block whose header matches H contains a line matching R
+#   {block: H, every_contains: R}   true if at least one H block exists and every one contains R
+#   add where: W to a block rule    only consider H blocks that contain a line matching W
+#   add gt: N to a line rule        true only if the first regex group, as a number, is > N
+#   {state: R, section: S}          true if a line of collected state section S matches R
+#   add absent: true to a state rule  true if section S was collected and no line matches R
+#   {ports_in_both: [A, B]}         true if some port (group 1) appears in both state tables A and B
+# Per control: fail_if_any -> fail; firmware -> data/firmware.yaml; pass_if_all / pass_if_any -> pass;
+# else `otherwise`. A state rule never matches when that state was not collected.
+adapter: cisco_ios
+spec_version: "0.2.0-draft"
+platform: Cisco IOS / IOS-XE
+status: draft, validated on Catalyst C1000 15.2(7)E (real devices, 2026-11)
+
+facts:
+  model:   {section: show inventory, line: '^PID:\s*(\S+)'}
+  version: {section: show version, line: 'Version ([^,\s]+)'}
+
+checks:
+
+  # ---------------- Level 1 ----------------
+
+  LYSS-MGMT-001:
+    fail_if_any:
+      - {block: '^line vty', line: '^transport input .*\b(telnet|all)\b'}
+      - {state: ':23\s.*LISTEN', section: show control-plane host open-ports}
+    pass_if_all:
+      - {block: '^line vty', every_contains: '^transport input (ssh|none)\s*$'}
+    otherwise: fail
+    note: Without an explicit "transport input ssh", many IOS versions accept Telnet on vty lines.
+    remediation: |
+      line vty 0 15
+       transport input ssh
+
+  LYSS-MGMT-002:
+    fail_if_any:
+      - {state: '^SSH-1\.', section: ssh banner}
+    pass_if_any:
+      - {line: '^ip ssh version 2\s*$'}
+      - {state: '^SSH-2\.0-', section: ssh banner}
+    otherwise: fail
+    note: Without "ip ssh version 2", IOS runs SSH 1.99 and accepts SSHv1 clients.
+    remediation: |
+      ip ssh version 2
+
+  LYSS-MGMT-003:
+    fail_if_any:
+      - {line: '^ip http server\s*$'}
+      - {state: ':80\s.*LISTEN', section: show control-plane host open-ports}
+    otherwise: pass
+    remediation: |
+      no ip http server
+      ip http secure-server   ! only if the web UI is really needed
+
+  LYSS-MGMT-004:
+    fail_if_any:
+      - {block: '^line (con|vty)', line: '^exec-timeout 0( 0)?\s*$'}
+      - {block: '^line (con|vty)', line: '^exec-timeout (\d+)', gt: 10}
+    otherwise: pass
+    note: IOS default is 10 minutes when exec-timeout is not set.
+    remediation: |
+      line con 0
+       exec-timeout 10 0
+      line vty 0 15
+       exec-timeout 10 0
+
+  LYSS-AUTH-001:
+    fail_if_any:
+      - {line: '(?i)^snmp-server community (public|private)\b'}
+    otherwise: pass
+    remediation: |
+      no snmp-server community public
+      no snmp-server community private
+      ! then configure SNMPv3 (LYSS-AUTH-011)
+
+  LYSS-AUTH-002:
+    fail_if_any:
+      - {line: '^enable password\b'}
+    pass_if_any:
+      - {line: '^enable (algorithm-type \S+ )?secret\b'}
+      # no enable credential at all: privilege 15 only through local accounts stored as a hash
+      - {line: '^username \S+ (.* )?privilege 15 (.* )?secret\b', say: 'no enable credential; privileged access only through hashed local accounts (username ... privilege 15 secret)'}
+    otherwise: unknown
+    note: No enable credential in config; acceptable only if privilege 15 comes from AAA or hashed local users.
+    remediation: |
+      no enable password
+      enable algorithm-type scrypt secret <new-secret>
+
+  LYSS-AUTH-003:
+    fail_if_any:
+      - {line: '^username \S+ .*\bpassword\b'}
+    otherwise: pass
+    note: 'A "username ... password" line is stored cleartext (type 0) or reversible (type 7); use "secret".'
+    remediation: |
+      username <name> privilege 15 algorithm-type scrypt secret <new-secret>
+      ! then remove the old "username <name> password" line
+
+  LYSS-AUTH-004:
+    fail_if_any:
+      - {block: '^(radius|tacacs) server', line: '^key (0 )?(?!(6|7) )\S'}
+      - {line: '^(radius|tacacs)-server (.* )?key (0 )?(?!(6|7) )\S'}
+    otherwise: pass
+    note: Type 7 is accepted at Level 1 but is reversible; Level 2 will require type 6 (AES).
+    remediation: |
+      key config-key password-encrypt <master-key>
+      password encryption aes
+      ! then rotate the shared key on the switch AND on the RADIUS server (NPS)
+
+  LYSS-VULN-001:
+    firmware: true
+    otherwise: unknown
+    note: Model/firmware not collected, or platform not yet in data/firmware.yaml.
+    remediation: |
+      ! upgrade to the latest release of the train named in the evidence
+      ! (Catalyst 1000: 15.2(7)E14 or later; security fixes until 2028-04-30)
+      ! until then, restrict SNMP and management access to the admin network (LYSS-MGMT-010)
+
+  LYSS-BKP-001:
+    backup: true   # vendor-neutral: evaluated from the LYSS configuration archive / attestation
+    otherwise: unknown
+    note: No backup evidence yet. Enable scheduled scans, or attest the external backup system on the switch page.
+    remediation: |
+      ! Settings > Scheduled scans (LYSS keeps every configuration version), or
+      ! attest the external backup (Oxidized, RANCID...) on the switch page.
+
+  # ---------------- Level 2 ----------------
+
+  LYSS-AUTH-010:
+    pass_if_all:
+      - {line: '^aaa new-model'}
+      - {line: '^aaa authentication login \S+ group \S+'}
+    otherwise: fail
+    remediation: |
+      aaa new-model
+      aaa authentication login default group <radius-group> local
+      aaa authorization exec default group <radius-group> local
+
+  LYSS-AUTH-011:
+    fail_if_any:
+      - {line: '^snmp-server community '}
+    otherwise: pass
+    remediation: |
+      no snmp-server community <name>
+      snmp-server group LYSS v3 priv
+      snmp-server user <user> LYSS v3 auth sha <pw> priv aes 128 <pw>
+
+  LYSS-MGMT-010:
+    pass_if_all:
+      - {block: '^line vty', every_contains: '^access-class \S+ in'}
+    otherwise: fail
+    remediation: |
+      ip access-list standard MGMT
+       permit <admin-subnet> <wildcard>
+      line vty 0 15
+       access-class MGMT in
+
+  LYSS-MGMT-011:
+    fail_if_any:
+      - {block: '^interface Vlan1$', line: '^ip address (\d|dhcp)'}
+    pass_if_any:
+      - {block: '^interface Vlan(?!1$)\d+$', line: '^ip address \d'}
+    otherwise: unknown
+    remediation: |
+      interface Vlan<mgmt-vlan>
+       ip address <ip> <mask>
+      interface Vlan1
+       no ip address
+       shutdown
+
+  LYSS-MGMT-012:
+    pass_if_any:
+      - {line: '^banner (login|motd) '}
+    otherwise: fail
+    remediation: |
+      banner login ^Authorized access only. Activity is logged.^
+
+  LYSS-MGMT-013:
+    fail_if_any:
+      - {state: '^kex: .*(sha1|group1\b)', section: ssh negotiated}
+      - {state: '^cipher: .*(cbc|3des|arcfour|blowfish)', section: ssh negotiated}
+      - {state: '^hostkey: (ssh-rsa|ssh-dss)\s*$', section: ssh negotiated}
+    pass_if_any:
+      - {state: '^kex: ', section: ssh negotiated}
+    otherwise: unknown
+    note: Needs the negotiated SSH algorithms (collector).
+    remediation: |
+      ip ssh dh min size 2048
+      ip ssh server algorithm encryption aes256-ctr aes192-ctr aes128-ctr
+      ip ssh server algorithm mac hmac-sha2-256 hmac-sha2-512
+      ! if the image offers no SHA-2 key exchange, upgrade IOS (check "ip ssh server algorithm kex ?")
+
+  LYSS-LOG-010:
+    pass_if_any:
+      - {line: '^logging (host )?\d+\.\d+\.\d+\.\d+'}
+    otherwise: fail
+    remediation: |
+      logging host <siem-ip>
+      logging trap informational
+
+  LYSS-LOG-011:
+    pass_if_any:
+      - {line: '^ntp server '}
+    otherwise: fail
+    remediation: |
+      ntp server <ntp-ip>
+
+  LYSS-ACC-010:
+    fail_if_any:
+      - {state: '\bnotconnect\b', section: show interfaces status}
+    pass_if_any:
+      - {state: '.', section: show interfaces status}
+    otherwise: unknown
+    note: Needs "show interfaces status" (notconnect = enabled but unused; disabled = shut).
+    remediation: |
+      interface range <unused-ports>
+       shutdown
+       switchport access vlan <parking-vlan>
+
+  LYSS-ACC-011:
+    pass_if_any:
+      - {line: '^spanning-tree portfast (edge )?bpduguard default'}
+      - {block: '^interface \S*Ethernet', where: '^switchport mode access', every_contains: '^spanning-tree bpduguard enable'}
+    otherwise: fail
+    remediation: |
+      spanning-tree portfast edge bpduguard default

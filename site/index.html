@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LYSS — Open security standard and free audit tool for network switches</title>
+<meta name="description" content="LYSS (Lyaazale Switch Security) is an open, vendor-neutral security standard for network switches, with a free read-only audit tool for Cisco IOS, Cisco Business and HPE Aruba: evidence for every finding, fixes, ISO 27001 mappings. Made in Morocco.">
+<meta name="author" content="Mouad Lyaazale">
+<link rel="canonical" href="https://lyss.dev/">
+<meta property="og:site_name" content="LYSS">
+<meta property="og:title" content="LYSS — the open security standard for network switches">
+<meta property="og:description" content="Telnet still on? SNMP public? Exploited firmware? A free, read-only tool checks your Cisco and HPE Aruba switches, shows the evidence and the fix. By Mouad Lyaazale · Made in Morocco.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lyss.dev/">
+<meta property="og:image" content="https://lyss.dev/img/og-lyss.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="LYSS finding on a fictitious switch: Telnet management enabled, with evidence and fix">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0d6b47">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "LYSS (Lyaazale Switch Security)",
+  "url": "https://lyss.dev/",
+  "image": "https://lyss.dev/img/og-lyss.jpg",
+  "description": "Open, vendor-neutral security standard for network switches, with a free read-only audit tool for Cisco IOS, Cisco Business and HPE Aruba AOS-S.",
+  "applicationCategory": "SecurityApplication",
+  "operatingSystem": "Windows, Linux",
+  "softwareVersion": "0.5.0",
+  "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+  "author": {"@type": "Person", "name": "Mouad Lyaazale", "nationality": "Moroccan", "email": "lyaazale@lyss.dev"},
+  "countryOfOrigin": {"@type": "Country", "name": "Morocco"}
+}
+</script>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script src="lang.js" defer></script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="#top" aria-label="LYSS home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 6.5v8.2c0 7.3 5 13.4 12 15.3 7-1.9 12-8 12-15.3V6.5Z" fill="currentColor"/><g class="lines"><rect x="9" y="11" width="14" height="2.2" rx="1.1"/><rect x="9" y="15" width="14" height="2.2" rx="1.1"/><rect x="9" y="19" width="9" height="2.2" rx="1.1"/><circle cx="21.5" cy="20.1" r="1.6"/></g></svg>
+      <span>LYSS</span>
+    </a>
+    <nav aria-label="Sections">
+      <a href="#levels"><span class="en">Levels</span><span class="fr">Niveaux</span></a>
+      <a href="#how"><span class="en">How it works</span><span class="fr">Fonctionnement</span></a>
+      <a href="screenshots.html"><span class="en">Screenshots</span><span class="fr">Captures</span></a>
+      <a href="#open"><span class="en">Open</span><span class="fr">Ouvert</span></a>
+    </nav>
+    <div class="langs" role="group" aria-label="Language">
+      <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-set-lang="fr" aria-pressed="false">FR</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="kicker"><span class="en">Lyaazale Switch Security · preview 0.5</span><span class="fr">Lyaazale Switch Security · préversion 0.5</span></p>
+      <h1>
+        <span class="en">The open security standard for network switches.</span>
+        <span class="fr">Le standard ouvert de sécurité des commutateurs réseau.</span>
+      </h1>
+      <p class="lead">
+        <span class="en">LYSS defines what a securely managed switch looks like, once and for every vendor, and gives you a free, read-only tool that checks your switches against it, explains every finding and helps you fix it.</span>
+        <span class="fr">LYSS définit ce qu'est un switch correctement sécurisé, une fois pour toutes et pour tous les fabricants, et fournit un outil gratuit, en lecture seule, qui vérifie vos switchs, explique chaque écart et aide à le corriger.</span>
+      </p>
+      <div class="cta">
+        <a class="btn btn-ghost" href="screenshots.html"><span class="en">See screenshots</span><span class="fr">Voir les captures</span></a>
+        <a class="btn" href="https://github.com/lyss-project/lyss"><span class="en">Get it on GitHub</span><span class="fr">Le télécharger sur GitHub</span></a>
+      </div>
+    </div>
+    <figure class="report" aria-label="Example assessment (fictitious)">
+      <figcaption><span class="en">Example assessment · fictitious switch</span><span class="fr">Exemple d'évaluation · switch fictif</span></figcaption>
+      <div class="dev"><strong>demo-acc-02</strong><span class="lvl l0">Level 0</span></div>
+      <ul class="checks">
+        <li class="fail"><code>MGMT-001</code><span class="en">Telnet management is enabled</span><span class="fr">Administration Telnet activée</span></li>
+        <li class="fail"><code>MGMT-003</code><span class="en">Cleartext HTTP management is enabled</span><span class="fr">Administration HTTP en clair activée</span></li>
+        <li class="fail"><code>VULN-001</code><span class="en">Firmware has a known critical vulnerability</span><span class="fr">Firmware avec une vulnérabilité critique connue</span></li>
+        <li class="pass"><code>AUTH-001</code><span class="en">No default SNMP community</span><span class="fr">Pas de communauté SNMP par défaut</span></li>
+        <li class="pass"><code>AUTH-002</code><span class="en">Privileged password stored as a strong hash</span><span class="fr">Mot de passe privilégié stocké en hachage fort</span></li>
+      </ul>
+    </figure>
+  </div>
+</section>
+
+<section class="why">
+  <div class="wrap three">
+    <div>
+      <h2><span class="en">Switches are forgotten</span><span class="fr">Les switchs sont oubliés</span></h2>
+      <p><span class="en">They carry every packet of the network, yet Telnet, plain HTTP, default SNMP communities and years-old firmware stay in production for years.</span><span class="fr">Tout le trafic passe par eux, et pourtant Telnet, HTTP en clair, communautés SNMP par défaut et firmwares anciens restent en production pendant des années.</span></p>
+    </div>
+    <div>
+      <h2><span class="en">Every vendor is different</span><span class="fr">Chaque fabricant est différent</span></h2>
+      <p><span class="en">Hardening guides exist per vendor and per product line. A mixed network has no single yardstick, so nobody can say how secure it really is.</span><span class="fr">Les guides de durcissement existent par fabricant et par gamme. Un réseau hétérogène n'a pas de référence commune : personne ne peut dire à quel point il est sécurisé.</span></p>
+    </div>
+    <div>
+      <h2><span class="en">Audits must be proven</span><span class="fr">Les audits doivent être prouvés</span></h2>
+      <p><span class="en">ISO 27001, NIS2 and national directives ask for evidence. LYSS gives a verdict per control with the configuration lines behind it, secrets redacted.</span><span class="fr">L'ISO 27001, NIS2 et les directives nationales exigent des preuves. LYSS donne un verdict par contrôle avec les lignes de configuration qui le justifient, secrets masqués.</span></p>
+    </div>
+  </div>
+</section>
+
+<section id="levels" class="levels">
+  <div class="wrap">
+    <h2 class="section"><span class="en">Three conformance levels</span><span class="fr">Trois niveaux de conformité</span></h2>
+    <div class="three">
+      <article class="level">
+        <span class="badge b1">1</span>
+        <h3><span class="en">Baseline</span><span class="fr">Socle</span></h3>
+        <p><span class="en">No cleartext management, no default or recoverable credentials, supported firmware without known critical or exploited vulnerabilities, automatic configuration backups.</span><span class="fr">Aucune administration en clair, aucun identifiant par défaut ou réversible, firmware supporté sans vulnérabilité critique ou exploitée connue, sauvegardes automatiques de la configuration.</span></p>
+      </article>
+      <article class="level">
+        <span class="badge b2">2</span>
+        <h3><span class="en">Hardened</span><span class="fr">Renforcé</span></h3>
+        <p><span class="en">Central authentication (RADIUS/TACACS+), management restricted to admin networks and modern SSH, remote logging, time synchronization, unused ports disabled, BPDU guard on edge ports.</span><span class="fr">Authentification centralisée (RADIUS/TACACS+), administration limitée aux réseaux d'administration et SSH moderne, journalisation distante, synchronisation de l'heure, ports inutilisés désactivés, BPDU guard sur les ports d'accès.</span></p>
+      </article>
+      <article class="level">
+        <span class="badge b3">3</span>
+        <h3><span class="en">Advanced</span><span class="fr">Avancé</span></h3>
+        <p><span class="en">Access-layer protections such as DHCP snooping, dynamic ARP inspection and port security. Draft, open for contributions.</span><span class="fr">Protections de la couche d'accès : DHCP snooping, inspection ARP dynamique, sécurité des ports. En cours de rédaction, ouvert aux contributions.</span></p>
+      </article>
+    </div>
+    <p class="note"><span class="en">Every control has a requirement, a rationale, a vendor-neutral test procedure and informative mappings to ISO/IEC 27001:2022, NIST SP 800-53 r5 and CIS Controls v8.</span><span class="fr">Chaque contrôle comporte une exigence, une justification, une procédure de test indépendante du fabricant et des correspondances avec l'ISO/IEC 27001:2022, le NIST SP 800-53 r5 et les CIS Controls v8.</span></p>
+  </div>
+</section>
+
+<section id="how" class="how">
+  <div class="wrap">
+    <h2 class="section"><span class="en">How the tool works</span><span class="fr">Comment fonctionne l'outil</span></h2>
+    <ol class="steps">
+      <li>
+        <h3><span class="en">Collect</span><span class="fr">Collecter</span></h3>
+        <p><span class="en">Read-only SSH, in parallel, optionally through a jump host. Only "show" commands. Host keys are pinned on first contact.</span><span class="fr">SSH en lecture seule, en parallèle, éventuellement via un rebond. Uniquement des commandes « show ». Clés d'hôte épinglées au premier contact.</span></p>
+      </li>
+      <li>
+        <h3><span class="en">Assess</span><span class="fr">Évaluer</span></h3>
+        <p><span class="en">A verdict for every control with its evidence, a conformance level per switch, a topology map from LLDP/CDP, history and drift alerts.</span><span class="fr">Un verdict par contrôle avec sa preuve, un niveau de conformité par switch, une carte de topologie LLDP/CDP, un historique et des alertes de dérive.</span></p>
+      </li>
+      <li>
+        <h3><span class="en">Fix, if you choose</span><span class="fr">Corriger, si vous le décidez</span></h3>
+        <p><span class="en">Off by default. Low-risk fixes only, previewed, applied one switch at a time, verified over a new connection, rolled back automatically, logged.</span><span class="fr">Désactivé par défaut. Corrections à faible risque uniquement, prévisualisées, appliquées switch par switch, vérifiées par une nouvelle connexion, annulées automatiquement en cas d'échec, journalisées.</span></p>
+      </li>
+    </ol>
+    <p class="note"><span class="en">Runs on your own machine or server. Your configurations never leave your network.</span><span class="fr">Fonctionne sur votre propre poste ou serveur. Vos configurations ne quittent jamais votre réseau.</span></p>
+  </div>
+</section>
+
+<section id="platforms" class="platforms">
+  <div class="wrap">
+    <h2 class="section"><span class="en">Supported platforms</span><span class="fr">Plateformes prises en charge</span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th><span class="en">Platform</span><span class="fr">Plateforme</span></th><th><span class="en">Levels</span><span class="fr">Niveaux</span></th><th><span class="en">Fixes</span><span class="fr">Corrections</span></th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cisco IOS / IOS-XE (Catalyst)</td><td>1 · 2</td><td><span class="en">yes</span><span class="fr">oui</span></td></tr>
+          <tr><td>Cisco Small Business / Business (SG, CBS)</td><td>1 · 2</td><td><span class="en">yes</span><span class="fr">oui</span></td></tr>
+          <tr><td>HPE Aruba AOS-S (ProCurve)</td><td>1 · 2</td><td><span class="en">basic</span><span class="fr">de base</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note"><span class="en">More platforms are planned. Adapters are plain YAML files: a new vendor needs no code.</span><span class="fr">D'autres plateformes sont prévues. Les adaptateurs sont de simples fichiers YAML : un nouveau fabricant ne demande aucun code.</span></p>
+  </div>
+</section>
+
+<section id="integrations" class="integrations">
+  <div class="wrap">
+    <h2 class="section"><span class="en">Fits your compliance work</span><span class="fr">S'intègre à votre conformité</span></h2>
+    <div class="three">
+      <article class="level">
+        <h3>CISO Assistant</h3>
+        <p><span class="en">Compatible with CISO Assistant, the open-source GRC platform. After every scheduled scan, LYSS uploads the switch report as a new revision of your evidence, automatically: your ISO 27001 controls stay documented without copy and paste.</span><span class="fr">Compatible avec CISO Assistant, la plateforme GRC open source. Après chaque scan planifié, LYSS dépose automatiquement le rapport des switchs comme nouvelle révision de votre preuve : vos mesures ISO 27001 restent documentées, sans copier-coller.</span></p>
+      </article>
+      <article class="level">
+        <h3><span class="en">Reports for auditors</span><span class="fr">Rapports pour les auditeurs</span></h3>
+        <p><span class="en">Standalone HTML reports (printable to PDF) and JSON, per switch, per site or for the whole fleet, with ISO/IEC 27001:2022, NIST SP 800-53 and CIS Controls mappings.</span><span class="fr">Rapports HTML autonomes (imprimables en PDF) et JSON, par switch, par site ou pour tout le parc, avec les correspondances ISO/IEC 27001:2022, NIST SP 800-53 et CIS Controls.</span></p>
+      </article>
+      <article class="level">
+        <h3><span class="en">Alerts</span><span class="fr">Alertes</span></h3>
+        <p><span class="en">E-mail alerts when a control starts failing, a collection fails or a new switch appears on the network.</span><span class="fr">Alertes e-mail quand un contrôle se met à échouer, qu'une collecte échoue ou qu'un nouveau switch apparaît sur le réseau.</span></p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="open" class="open">
+  <div class="wrap two">
+    <div>
+      <h2 class="section"><span class="en">Open by design</span><span class="fr">Ouvert par conception</span></h2>
+      <p><span class="en">The specification is published under Creative Commons BY 4.0 and the tool under the GNU AGPL v3 licence. Anyone can read, implement, audit and improve them, as long as the author credit "LYSS by Mouad Lyaazale · Made in Morocco" is kept.</span><span class="fr">La spécification est publiée sous licence Creative Commons BY 4.0 et l'outil sous licence GNU AGPL v3. Chacun peut les lire, les implémenter, les auditer et les améliorer, à condition de conserver la mention « LYSS by Mouad Lyaazale · Made in Morocco ».</span></p>
+      <p><span class="en">The source code is public on <a href="https://github.com/lyss-project/lyss">GitHub</a>. Try the demo in two minutes without any switch, report wrong verdicts, propose controls or adapters for other vendors.</span><span class="fr">Le code source est public sur <a href="https://github.com/lyss-project/lyss">GitHub</a>. Essayez la démo en deux minutes sans aucun switch, signalez les verdicts erronés, proposez des contrôles ou des adaptateurs pour d'autres fabricants.</span></p>
+    </div>
+    <div class="contact">
+      <h3><span class="en">Contact</span><span class="fr">Contact</span></h3>
+      <p><a href="mailto:lyaazale@lyss.dev">lyaazale@lyss.dev</a></p>
+      <p class="small"><span class="en">Security issues: please report them privately to the same address.</span><span class="fr">Failles de sécurité : merci de les signaler en privé à la même adresse.</span></p>
+    </div>
+  </div>
+</section>
+
+<section class="morocco" aria-label="Designed in Morocco">
+  <div class="wrap morocco-inner">
+    <img class="morocco-map" src="maroc.svg" width="580" height="621" alt="Map of Morocco filled with a zellige pattern">
+    <div>
+      <div class="morocco-brand"><img src="favicon.svg" alt="" width="34" height="34"> LYSS</div>
+      <p>Lyaazale Switch Security</p>
+      <p class="sub"><span class="en">Open, vendor-neutral security standard for network switches.</span><span class="fr">Standard ouvert de sécurité des switchs, indépendant des fabricants.</span><br>
+        <span lang="ar" dir="rtl">صُنع في المغرب</span> · <span class="en">Made in Morocco</span><span class="fr">Fabriqué au Maroc</span></p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <p>© 2026 Mouad Lyaazale · <span class="en">Specification CC BY 4.0 · Software AGPL v3</span><span class="fr">Spécification CC BY 4.0 · Logiciel AGPL v3</span></p>
+    <p class="made"><span class="en">Designed in Morocco</span><span class="fr">Conçu au Maroc</span></p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,110 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{% extends "base.html" %}
+{% block title %}Discovery{% endblock %}
+{% block nav_discovery %}active{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Discovery</h1>
+    <p class="muted">Switches that are on the network but not in {{ project }} yet. Nothing is added without your confirmation.</p>
+  </div>
+  <form method="post" action="/discovery/neighbors" class="actions">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button class="btn" type="submit">Discover from neighbours</button>
+  </form>
+</div>
+
+{% if errors %}<div class="alert alert-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+{% if saved %}<div class="alert alert-ok">{{ saved }}</div>{% endif %}
+
+<div class="grid-main">
+  <section class="card table-card">
+    <div class="table-tools disc-head">
+      <strong>Discovered switches ({{ candidates|length }})</strong>
+      <span class="muted">Neighbour discovery runs automatically after every scan{% if state.last_neighbors %} · last {{ state.last_neighbors.replace("T", " ")[:16] }}{% endif %}.</span>
+    </div>
+    {% if candidates %}
+    <form method="post" action="/discovery/add" id="disc-form">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <table class="table">
+        <thead><tr><th><input type="checkbox" data-check-all aria-label="Select all"></th><th>Switch</th><th>Platform</th><th>Found via</th><th></th></tr></thead>
+        <tbody>
+          {% for c in candidates %}
+          <tr>
+            <td><input type="checkbox" name="ips" value="{{ c.ip }}" {% if not c.adapter %}disabled title="Unknown platform: add it manually"{% endif %}></td>
+            <td><strong>{{ c.name or c.suggest }}</strong><div class="sub mono">{{ c.ip }}{% if c.site %} <span class="tag" title="Site (from the address)">{{ c.site }}</span>{% endif %}</div></td>
+            <td>{% if c.adapter %}<span class="tag">{{ c.adapter }}</span>{% else %}<span class="tag">unknown</span>{% endif %}
+                <div class="sub">{{ (c.platform or c.label or c.banner or "")[:60] }}</div></td>
+            <td class="sub">{% for s in c.sources %}<div>{{ s }}</div>{% endfor %}</td>
+            <td class="row-actions">
+              <a class="btn btn-sm" href="/devices/new?host={{ c.ip|urlencode }}&id={{ c.suggest|urlencode }}&vendor={{ (c.adapter or '')|urlencode }}">Add…</a>
+              <button class="btn btn-sm btn-ghost" type="submit" form="ignore-{{ loop.index }}">Ignore</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="bulk-bar">
+        {% if profiles %}
+        <label>Credential profile
+          <select name="profile">{% for p in profiles %}<option value="{{ p.id }}">{{ p.name }} ({{ p.username }})</option>{% endfor %}</select>
+        </label>
+        <label class="check"><input type="checkbox" name="scan_now" checked> Scan them right away</label>
+        <button class="btn btn-primary" type="submit">Add selected</button>
+        {% else %}
+        <span class="muted">To add several switches at once, create a credential profile in <a href="/settings">Settings</a>.</span>
+        {% endif %}
+      </div>
+    </form>
+    {% for c in candidates %}
+    <form method="post" action="/discovery/ignore" id="ignore-{{ loop.index }}" hidden>
+      <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="ip" value="{{ c.ip }}">
+    </form>
+    {% endfor %}
+    {% else %}
+    <div class="empty">
+      <h2>Nothing new</h2>
+      <p class="muted">Every switch seen by your managed switches is already in {{ project }}. Scan address ranges to find isolated ones.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <aside class="card side">
+    <h2>Scan address ranges</h2>
+    <p class="muted small">Probes SSH (TCP 22) and recognises switches from their SSH banner. Only scan networks you are authorised to scan.</p>
+    <section id="disc-progress" class="disc-progress" {% if not scan.running %}hidden{% endif %}>
+      <div class="job-head"><strong>Scanning{% if scan.label %} {{ scan.label }}{% endif %}…</strong><span class="muted" id="disc-count">{{ scan.done }} / {{ scan.total }}</span></div>
+      <div class="progress"><div id="disc-bar"></div></div>
+      <p class="muted small" id="disc-found">{{ scan.found }} switch-like device(s) found</p>
+      {% if scan.gentle %}<p class="muted small">Gentle rate (remote site): a /24 takes about a minute.</p>{% endif %}
+    </section>
+    {% if sites %}
+    <h3 class="small-head">Scan a site</h3>
+    <form method="post" action="/discovery/site">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <ul class="site-scans">
+        {% for s in sites %}
+        <li class="site-scan">
+          <span><strong>{{ s.name }}</strong><span class="sub mono">{{ s.scannable|join(", ") or "—" }}{% if s.too_big %} · skipped (larger than /20): {{ s.too_big|join(", ") }}{% endif %}</span></span>
+          <button class="btn btn-sm" type="submit" name="site_id" value="{{ s.id }}" {% if scan.running or not s.scannable %}disabled{% endif %}>Scan</button>
+        </li>
+        {% endfor %}
+      </ul>
+      <label class="check"><input type="checkbox" name="via_jump" {% if not jump_ready %}disabled{% elif jump_source %}checked{% endif %}> Through the jump host{% if jump_source %} (from {{ jump_source }}){% endif %}</label>
+    </form>
+    <p class="muted small">Sites are scanned at a gentle rate so VPN tunnels and the sites' firewalls stay quiet.</p>
+    <h3 class="small-head">Or any ranges</h3>
+    {% endif %}
+    <form method="post" action="/discovery/scan" class="stack">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label>Ranges (CIDR, IP or a-b on the last octet)
+        <textarea name="ranges" rows="4" spellcheck="false" placeholder="192.0.2.0/24&#10;198.51.100.1-60">{{ ranges }}</textarea>
+      </label>
+      <label class="check"><input type="checkbox" name="via_jump" {% if jump_ready %}checked{% else %}disabled{% endif %}> Through the jump host</label>
+      <button class="btn btn-primary" type="submit" {% if scan.running %}disabled{% endif %}>Scan ranges</button>
+      {% if state.last_scan %}<p class="muted small">Last range scan: {{ state.last_scan.replace("T", " ")[:16] }}</p>{% endif %}
+    </form>
+  </aside>
+</div>
+{% endblock %}

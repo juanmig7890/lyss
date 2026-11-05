@@ -1,0 +1,78 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{% extends "base.html" %}
+{% block title %}{{ "Edit " ~ device.id if editing else "Add switch" }}{% endblock %}
+{% block nav_switches %}active{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <a class="back" href="/">← Switches</a>
+    <h1>{{ "Edit " ~ device.id if editing else "Add a switch" }}</h1>
+    <p class="muted">LYSS only runs read-only "show" commands. A read-only account is enough.</p>
+  </div>
+</div>
+
+{% if errors %}<div class="alert alert-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+
+<form method="post" class="card form-grid" autocomplete="off">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <label>Name
+    <input name="id" value="{{ device.id or '' }}" pattern="[a-z0-9][a-z0-9-]{0,39}" maxlength="40"
+           placeholder="core-sw-01" {% if editing %}disabled{% else %}required autofocus{% endif %}>
+    <small>Lowercase letters, digits and dashes.</small>
+  </label>
+  <label>Platform
+    <select name="vendor" required>
+      <option value="auto" {% if not device.vendor or device.vendor == "auto" %}selected{% endif %}>Auto-detect (from the SSH banner)</option>
+      {% for v in vendors %}<option value="{{ v }}" {% if v == device.vendor %}selected{% endif %}>{{ v }}</option>{% endfor %}
+    </select>
+    <small>Auto-detect picks the adapter at the first scan. Device state collection: cisco_ios, cisco_sb, hp_procurve.</small>
+  </label>
+  <label>Address
+    <input name="host" value="{{ device.host or '' }}" maxlength="253" placeholder="192.0.2.10" required>
+  </label>
+  <label>SSH port
+    <input name="port" value="{{ device.port or 22 }}" inputmode="numeric" pattern="[0-9]{1,5}" required>
+  </label>
+  {% if sites %}
+  <label class="span-2">Site
+    <select name="site">
+      <option value="" {% if not device.site %}selected{% endif %}>Automatic, from the address{% if auto_site %} (currently: {{ auto_site }}){% endif %}</option>
+      {% for s in sites %}<option value="{{ s.id }}" {% if s.id == device.site %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+    </select>
+    <small>Sites and their address ranges are defined in Settings.</small>
+  </label>
+  {% endif %}
+  <label class="span-2">Credentials
+    <select name="profile" id="cred-select">
+      <option value="" {% if not device.profile %}selected{% endif %}>Specific to this switch</option>
+      {% for p in profiles %}<option value="{{ p.id }}" {% if p.id == device.profile %}selected{% endif %}>Profile: {{ p.name }} ({{ p.username }})</option>{% endfor %}
+    </select>
+    <small>Credential profiles (Settings) let many switches share one read-only account.</small>
+  </label>
+  <label data-own-cred>Username
+    <input name="username" value="{{ device.username or '' }}" maxlength="64" autocomplete="off">
+  </label>
+  <label data-own-cred>Password
+    <input type="password" name="password" autocomplete="new-password"
+           placeholder="{{ 'Leave empty to keep the stored password' if editing and device.secret else '' }}">
+    <small>Encrypted with Windows DPAPI for your account. Never shown again.</small>
+  </label>
+  <label class="check span-2">
+    <input type="checkbox" name="via_jump" {% if device.via_jump %}checked{% endif %}>
+    Reach this switch through the jump host (Settings)
+  </label>
+  <div class="form-actions span-2">
+    <a class="btn btn-ghost" href="/">Cancel</a>
+    <button class="btn btn-primary" type="submit">{{ "Save changes" if editing else "Add switch" }}</button>
+  </div>
+</form>
+
+{% if editing %}
+<form method="post" action="/devices/{{ device.id }}/delete" class="danger-zone card">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <div><strong>Remove this switch</strong><p class="muted">Deletes its stored credentials and last result.</p></div>
+  <button class="btn btn-danger" type="submit" data-confirm="Remove {{ device.id }} and its stored credentials?">Remove</button>
+</form>
+{% endif %}
+{% endblock %}

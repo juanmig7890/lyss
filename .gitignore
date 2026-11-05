@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+# real data: devices, credentials (DPAPI), settings, configs, results, history, backups
+private/
+reports/
+*.cred.xml

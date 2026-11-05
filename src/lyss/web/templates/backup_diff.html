@@ -1,0 +1,22 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{% extends "base.html" %}
+{% block title %}{{ device.id }} configuration {{ version_file }}{% endblock %}
+{% block nav_switches %}active{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <a class="back" href="/devices/{{ device.id }}#backups">← {{ device.id }}</a>
+    <h1>Configuration change</h1>
+    <p class="muted mono">{{ version_file }} compared with the previous stored version · secrets redacted</p>
+  </div>
+</div>
+<div class="card">
+  {% if lines %}
+  <pre class="code diff">{% for line in lines %}<span class="{{ 'd-add' if line.startswith('+') and not line.startswith('+++') else 'd-del' if line.startswith('-') and not line.startswith('---') else 'd-hunk' if line.startswith('@@') else '' }}">{{ line }}</span>
+{% endfor %}</pre>
+  {% else %}
+  <p class="muted">First stored version: nothing to compare with.</p>
+  {% endif %}
+</div>
+{% endblock %}

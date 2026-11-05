@@ -1,0 +1,20 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block main_class %}auth-layout{% endblock %}
+{% block content %}
+{% include "_hero.html" %}
+<section class="auth">
+  <h1>Sign in</h1>
+  <p class="muted">Administrator access to {{ project }} on this PC.</p>
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+  <form method="post" action="/login" class="stack">
+    <label>Administrator password
+      <input type="password" name="password" autocomplete="current-password" required autofocus>
+    </label>
+    <button class="btn btn-primary" type="submit">Sign in</button>
+  </form>
+  <p class="auth-foot muted">Local only · 127.0.0.1 · read-only collection</p>
+</section>
+{% endblock %}

@@ -1,0 +1,92 @@
+collected: 2026-11-03 02:00
+===== ssh banner =====
+SSH-2.0-Mocana SSH 6.3
+===== ssh negotiated =====
+kex: ecdh-sha2-nistp256
+cipher: aes256-ctr
+mac: hmac-sha2-256
+hostkey: rsa-sha2-256
+===== show version =====
+Image stamp:    /ws/swbuildm/rel_ukiah_qaoff/code/build/bom(swbuildm_rel_ukiah_qaoff_rel_ukiah)
+                Mar 14 2026 10:12:42
+                WC.16.11.0032
+                1201
+Boot Image:     Primary
+
+Boot ROM Version:    WC.17.02.0006
+Active Boot ROM:     Primary
+===== show system =====
+ Status and Counters - General System Information
+
+  System Name        : LAB-HP-HARDENED
+  System Contact     :
+  System Location    :
+
+  MAC Age Time (sec) : 300
+
+  Time Zone          : 0
+  Daylight Time Rule : None
+
+  Software revision  : WC.16.11.0032        Base MAC Addr      : 0000ab-000001
+  ROM Version        : WC.17.02.0006        Serial Number      : SG00FAKE01
+===== show modules =====
+ Status and Counters - Module Information
+
+  Chassis: 2930F-24G-4SFP+ JL253A          Serial Number:   SG00FAKE01
+
+  Slot  Module Description                       Serial Number    Status
+  ----- ---------------------------------------- ---------------- -------
+===== show ip ssh =====
+  SSH Enabled     : Yes                 Secure Copy Enabled : No
+  TCP Port Number : 22                  Timeout (sec)       : 120
+  Rekey Interval  : 0 (Disabled)        Host Key Type       : RSA
+  Host Key/Curve Size: 2048
+
+  Ciphers : aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+  MACs    : hmac-sha2-256,hmac-sha2-512
+===== show interfaces brief =====
+ Status and Counters - Port Status
+
+                          | Intrusion                           MDI   Flow Bcast
+  Port         Type       | Alert     Enabled Status Mode       Mode  Ctrl Limit
+  ------------ ---------- + --------- ------- ------ ---------- ----- ---- ------
+  1            100/1000T  | No        Yes     Up     1000FDx    MDIX  off  0
+  2            100/1000T  | No        Yes     Up     1000FDx    MDIX  off  0
+  3            100/1000T  | No        Yes     Up     1000FDx    MDIX  off  0
+  4            100/1000T  | No        Yes     Up     1000FDx    MDIX  off  0
+  5            100/1000T  | No        Yes     Up     1000FDx    MDIX  off  0
+  6            100/1000T  | No        Yes     Up     1000FDx    MDIX  off  0
+  7            100/1000T  | No        Yes     Up     1000FDx    MDIX  off  0
+  8            100/1000T  | No        Yes     Up     1000FDx    MDIX  off  0
+  9            100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  10           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  11           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  12           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  13           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  14           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  15           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  16           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  17           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  18           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  19           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  20           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  21           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  22           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  23           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  24           100/1000T  | No        No      Down   1000FDx    Auto  off  0
+  25                      | No        No      Down   10GigFD    NA    off  0
+  26                      | No        No      Down   10GigFD    NA    off  0
+  27-Trk1      SFP+SR     | No        Yes     Up     10GigFD    NA    off  0
+  28-Trk1      SFP+SR     | No        Yes     Up     10GigFD    NA    off  0
+===== show lldp info remote-device =====
+ LLDP Remote Devices Information
+
+  LocalPort | ChassisId                 PortId PortDescr SysName
+  --------- + ------------------------- ------ --------- ----------------------
+  27        | 00 00 5e 00 53 01         49     49        LAB-CORE
+  28        | 00 00 5e 00 53 01         50     50        LAB-CORE
+===== show cdp neighbors =====
+ CDP neighbors information
+
+  Port   Device ID                     | Platform                     Capability
+  ------ ----------------------------- + ---------------------------- -----------

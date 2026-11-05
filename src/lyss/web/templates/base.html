@@ -1,0 +1,47 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} · {{ project }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% if logged_in %}
+  <header class="topbar">
+    <a class="brand" href="/">
+      <img src="/static/favicon.svg" alt="" width="28" height="28">
+      <span><strong>{{ project }}</strong><small>{{ project_long }}</small></span>
+    </a>
+    <nav>
+      <a href="/" class="{% block nav_switches %}{% endblock %}">Switches</a>
+      <a href="/discovery" class="{% block nav_discovery %}{% endblock %}">Discovery</a>
+      <a href="/topology" class="{% block nav_topology %}{% endblock %}">Topology</a>
+      <a href="/matrix" class="{% block nav_matrix %}{% endblock %}">Matrix</a>
+      <a href="/remediation" class="{% block nav_remediation %}{% endblock %}">Remediation</a>
+      <a href="/firmware" class="{% block nav_firmware %}{% endblock %}">Firmware</a>
+      <a href="/settings" class="{% block nav_settings %}{% endblock %}">Settings</a>
+      <form method="post" action="/logout">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button class="btn btn-ghost btn-sm" type="submit">Sign out</button>
+      </form>
+    </nav>
+  </header>
+  <div class="zellige-band" aria-hidden="true"></div>
+  {% endif %}
+  <main class="{% block main_class %}container{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+  {% if logged_in %}
+  <footer class="footer">
+    <img src="/static/maroc.svg" alt="" width="18" height="19">
+    <span class="attribution">LYSS by Mouad Lyaazale · Made in Morocco</span>
+    <span>· {{ version }} · AGPL-3.0, no warranty · local only · read-only collection</span>
+  </footer>
+  {% endif %}
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

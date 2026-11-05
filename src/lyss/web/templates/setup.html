@@ -1,0 +1,22 @@
+{# SPDX-License-Identifier: AGPL-3.0-only
+   Copyright 2026 Mouad Lyaazale. Additional terms (author attribution, names): see NOTICE. -#}
+{% extends "base.html" %}
+{% block title %}First start{% endblock %}
+{% block main_class %}auth-layout{% endblock %}
+{% block content %}
+{% include "_hero.html" %}
+<section class="auth">
+  <h1>Welcome to {{ project }}</h1>
+  <p class="muted">Choose the administrator password. It is stored as a scrypt hash on this PC only.</p>
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+  <form method="post" action="/setup" class="stack">
+    <label>New password (12 characters minimum)
+      <input type="password" name="password" minlength="12" autocomplete="new-password" required autofocus>
+    </label>
+    <label>Confirm password
+      <input type="password" name="confirm" minlength="12" autocomplete="new-password" required>
+    </label>
+    <button class="btn btn-primary" type="submit">Create and sign in</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+#!/bin/sh
+# LYSS pre-commit hook: the whole test suite must pass before any commit.
+# Enabled with: git config core.hooksPath tools/git-hooks
+# Emergency bypass (avoid): git commit --no-verify
+if [ -x ".venv/Scripts/python.exe" ]; then
+  PY=".venv/Scripts/python.exe"
+elif [ -x ".venv/bin/python" ]; then
+  PY=".venv/bin/python"
+else
+  PY="python3"
+fi
+echo "LYSS: running the test suite before commit..."
+"$PY" -m pytest tests -q -p no:cacheprovider
+status=$?
+if [ $status -ne 0 ]; then
+  echo "LYSS: tests failed, commit refused." >&2
+  exit 1
+fi

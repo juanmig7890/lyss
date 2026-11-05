@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/lyss-project/lyss/security/advisories/new
+    about: Never in a public issue. Or e-mail lyaazale@lyss.dev.
+  - name: Website and demo
+    url: https://lyss.dev
+    about: What LYSS is, screenshots.

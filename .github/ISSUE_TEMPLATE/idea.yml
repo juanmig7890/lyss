@@ -1,0 +1,21 @@
+name: New control, platform or feature
+description: Propose a control for the specification, support for another vendor, or a feature.
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - New or changed control (specification)
+        - New platform / vendor (adapter)
+        - Tool feature
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What, why (the risk it addresses), and references (vendor guide, CIS, NIST, advisory).
+    validations:
+      required: true

@@ -1,0 +1,51 @@
+name: Wrong verdict
+description: A control is marked Fail while it is fine on your switch, or Pass while it should fail.
+labels: ["wrong verdict"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! **Never paste a full configuration**, and remove your addresses and device names.
+        LYSS redacts secrets in its evidence, but check what you send.
+  - type: input
+    id: control
+    attributes:
+      label: Control ID
+      placeholder: LYSS-MGMT-001
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Cisco IOS / IOS-XE
+        - Cisco Small Business / Business (SG, CBS)
+        - HPE Aruba AOS-S (ProCurve)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model and firmware version
+      placeholder: C1000-24T-4G-L, 15.2(7)E10
+  - type: textarea
+    id: what
+    attributes:
+      label: Verdict shown and expected verdict
+      description: What LYSS reported, what it should report, and why.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence lines
+      description: The evidence shown under the control, and the relevant configuration lines (redacted).
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: LYSS version
+      description: Shown in the footer of the web interface.
+      placeholder: 0.5.0
